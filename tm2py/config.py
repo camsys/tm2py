@@ -751,6 +751,7 @@ class HighwayClassConfig(ConfigItem):
     # highway.toll.dst_vehicle_group_names names
     excluded_links: Tuple[str, ...] = Field()
     skims: Tuple[str, ...] = Field()
+    output_skim_matrixname_tmpl: str = Field()
     toll: Tuple[str, ...] = Field()
     toll_factor: Optional[float] = Field(default=None, gt=0)
     demand: Tuple[HighwayClassDemandConfig, ...] = Field()
@@ -920,15 +921,12 @@ class HighwayConfig(ConfigItem):
     @validator("output_skim_matrixname_tmpl")
     def valid_skim_matrix_name_template(value):
         """Validate skim matrix template has correct {}."""
-        # assert (
-            # "{time_period" in value
-        # ), "-> 'output_skim_matrixname_tmpl must have {time_period}, found {value}."
         assert (
             "{property" in value
         ), "-> 'output_skim_matrixname_tmpl must have {property}, found {value}."
         assert (
-            "{mode" in value
-        ), "-> 'output_skim_matrixname_tmpl must have {mode}, found {value}."
+            "{class" in value
+        ), "-> 'output_skim_matrixname_tmpl must have {class}, found {value}."
         return value
 
     @validator("capclass_lookup")
@@ -975,12 +973,11 @@ class HighwayConfig(ConfigItem):
         """Validate classes .skims, .toll, and .excluded_links values."""
         if "tolls" not in values:
             return value
-        #avail_skims = ["time", "dist", "hovdist", "tolldist", "freeflowtime", "bridgetoll", 'valuetoll']
-        avail_skims = ["TIME", "DIST", "hovdist", "tolldist", "freeflowtime", "BTOLL", 'valuetoll']
+        avail_skims = ["time", "dist", "hovdist", "tolldist", "freeflowtime", "bridgetoll", 'valuetoll', 'btoll', 'vtoll']
         available_link_sets = ["is_sr", "is_sr2", "is_sr3", "is_auto_only"]
         avail_toll_attrs = []
         for name in values["tolls"].dst_vehicle_group_names:
-            toll_types = [f"bridgetoll_{name}", f"valuetoll_{name}"]
+            toll_types = [f"bridgetoll_{name}", f"valuetoll_{name}",f"btoll_{name}", f"vtoll_{name}"]
             avail_skims.extend(toll_types)
             avail_toll_attrs.extend(["@" + name for name in toll_types])
             available_link_sets.append(f"is_toll_{name}")

@@ -521,7 +521,7 @@
 [highway]
     output_skim_path = "skims/highway"
     output_skim_filename_tmpl = "HWYSKM{time_period}.omx"
-    output_skim_matrixname_tmpl = "{property}{mode}"
+    output_skim_matrixname_tmpl = "{property_name}{class_name}"
     relative_gap = 0.0005
     max_iterations = 100
     run_maz_assignment = false
@@ -535,7 +535,7 @@
         # the dst_vehicle_group_names is used in the class group suffix for the
         # highway.classes toll attribute name and the skims name, "bridgetoll_{}"
         # and "valuetoll_{}"
-        dst_vehicle_group_names = ["da", "sr2", "sr3", "vsm", "sml", "med", "lrg"]
+        dst_vehicle_group_names = ["da", "s2", "s3", "vsm", "sml", "med", "lrg"]
         # tollbooth separates links with "bridge" tolls (index < this value)
         # (used in all classes) vs. "value" tolls (used in toll-available classes only)
         # TM2: TOLLBOOTH codes 11 and above (please see hwyParam.block which denotes this value) are reserved for so-called "value
@@ -572,8 +572,8 @@
         value_of_time = 18.93
         operating_cost_per_mile = 17.23
         toll = [ "@bridgetoll_da" ]
-        #skims = [ "time", "dist", "freeflowtime", "bridgetoll",]
-		 skims = [ "TIME", "DIST", "freeflowtime", "BTOLL",]
+        skims = [ "time", "dist", "freeflowtime", "btoll", "vtoll",]
+        output_skim_matrixname_tmpl = "{property_name}{class_name}"
         [[highway.classes.demand]]
             source = "household"
             name = "da"
@@ -584,16 +584,16 @@
             source = "internal_external"
             name = "da"
     [[highway.classes]]
-        name = "sr2"
+        name = "s2"
         description = "shared ride 2"
         mode_code = "e"
         excluded_links = [ "is_sr3",]
         value_of_time = 18.93
         operating_cost_per_mile = 17.23
-        toll = [ "@bridgetoll_sr2" ]
+        toll = [ "@bridgetoll_s2" ]
         toll_factor = 0.5714285714285714
-        #skims = [ "time", "dist", "freeflowtime", "bridgetoll", "hovdist",]
-		skims = [ "TIME", "DIST", "freeflowtime", "BTOLL","hovdist"]
+        skims = [ "time", "dist", "freeflowtime", "btoll", "vtoll",]
+        output_skim_matrixname_tmpl = "{property_name}{class_name}"
         [[highway.classes.demand]]
             source = "household"
             name = "sr2"
@@ -605,16 +605,16 @@
             source = "internal_external"
             name = "sr2"
     [[highway.classes]]
-        name = "sr3"
+        name = "s3"
         description = "shared ride 3+"
         mode_code = "f"
         excluded_links = []
         value_of_time = 18.93
         operating_cost_per_mile = 17.23
-        toll = ["@bridgetoll_sr3"]
+        toll = ["@bridgetoll_s3"]
         toll_factor = 0.4
-        #skims = [ "time", "dist", "freeflowtime", "bridgetoll", "hovdist",]
-		skims = [ "TIME", "DIST", "freeflowtime", "BTOLL","hovdist"]
+        skims = [ "time", "dist", "freeflowtime", "btoll", "vtoll",]
+        output_skim_matrixname_tmpl = "{property_name}{class_name}"
         [[highway.classes.demand]]
             source = "household"
             name = "sr3"
@@ -633,8 +633,8 @@
         value_of_time = 37.87
         operating_cost_per_mile = 31.28
         toll = ["@bridgetoll_sml"]
-        #skims = [ "time", "dist", "freeflowtime", "bridgetoll_vsm", "bridgetoll_sml", "bridgetoll_med",]
-		skims = [ "TIME", "DIST", "freeflowtime", "bridgetoll_vsm", "bridgetoll_sml", "bridgetoll_med",]
+        skims = [ "time", "dist", "freeflowtime", "btoll_vsm", "btoll_sml", "btoll_med",]
+        output_skim_matrixname_tmpl = "{property_name}{class_name}"
         [[highway.classes.demand]]
             source = "truck"
             name = "vsmtrk"
@@ -653,8 +653,8 @@
         operating_cost_per_mile = 31.28
         toll = ["@bridgetoll_lrg"]
         pce = 2.0
-        #skims = [ "time", "dist", "freeflowtime", "bridgetoll_lrg",]
-		skims = [ "TIME", "DIST", "freeflowtime", "bridgetoll_lrg",]
+        skims = [ "time", "dist", "freeflowtime", "btoll_lrg",]
+        output_skim_matrixname_tmpl = "{property_name}{class_name}"
         [[highway.classes.demand]]
             source = "truck"
             name = "lrgtrk"

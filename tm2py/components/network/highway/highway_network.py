@@ -79,7 +79,8 @@ class PrepareNetwork(Component):
                 scenario = self.get_emme_scenario(
                     self.controller.config.emme.highway_database_path, time
                 )
-                self._create_class_attributes(scenario, time)
+                if self.controller.iteration == 0:
+                    self._create_class_attributes(scenario, time)
                 network = scenario.get_network()
                 self._set_tolls(network, time)
                 self._set_vdf_attributes(network, time)
@@ -166,7 +167,7 @@ class PrepareNetwork(Component):
         valuetoll_start_tollbooth_code = self.config.tolls.valuetoll_start_tollbooth_code
         for link in network.links():
             if link["@tollbooth"]:
-                index = (
+                index = int(
                     link["@tollbooth"] * 1000
                     + link["@tollseg"] * 10
                     + link["@useclass"]

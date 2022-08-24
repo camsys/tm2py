@@ -17,9 +17,9 @@
     initial_components = [
         #"create_tod_scenarios",            # working
         #"active_modes",                    # runs in lasso
-        "home_accessibility",              # working
+        #"home_accessibility",              # working
         #"air_passenger",                   # not needed for BART, not tested
-        #"prepare_network_highway",         # Working!!
+        "prepare_network_highway",         # Working!!
         "highway",                         # Working!!
         #"highway_maz_skim",                # not needed for BART, not tested
         #"prepare_network_transit",         # working

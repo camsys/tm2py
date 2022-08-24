@@ -280,7 +280,7 @@ class OMXManager:
             chunkshape = None
         if self._mask_max_value:
             numpy_array[numpy_array > self._mask_max_value] = 0
-        numpy_array = numpy_array.astype(dtype="float64", copy=False)
+        numpy_array = numpy_array.astype(dtype="float32", copy=False)
         self._omx_file.create_matrix(
             name, obj=numpy_array, chunkshape=chunkshape, attrs=attrs
         )
