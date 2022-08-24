@@ -9,7 +9,7 @@ import numpy as np
 from numpy import array as NumpyArray
 
 from tm2py.components.component import Component
-from tm2py.components.network.skims import get_omx_skim_as_numpy, get_summed_skims
+from tm2py.components.network.skims import get_omx_skim_as_numpy
 from tm2py.logger import LogStartEnd
 from tm2py.emme.matrix import OMXManager
 
@@ -122,52 +122,61 @@ class HomeAccessibility(Component):
             self._employment_df = self.get_employment_df()
         return self._employment_df
     
-    def get_summed_skims_from_config(self, mode, time_period, skim_prop=None):
-        formulas = self.config.__dict__[f'formula_{mode}']
-        if skim_prop is None:
-            skim_prop = formulas['prop']
-        if mode == 'auto':
-            return np.add.reduce([get_omx_skim_as_numpy(self.controller, *matrix, property=skim_prop) for matrix in formulas[time_period][0]]) + \
-                np.add.reduce([get_omx_skim_as_numpy(self.controller, *matrix, property=skim_prop) for matrix in formulas[time_period][1]]).T
-        elif mode == 'transit':
-            ivt_matrix_names = [dict(zip(['skim_mode','time_period','property'], matrix_name[0] + [matrix_name[1]])) for matrix_name in itertools.product(formulas[time_period][0], formulas['ivt'])]
-            ivt_matrix_names_T = [dict(zip(['skim_mode','time_period','property'], matrix_name[0] + [matrix_name[1]])) for matrix_name in itertools.product(formulas[time_period][1], formulas['ivt'])]
-            ovt_matrix_names = [dict(zip(['skim_mode','time_period','property'], matrix_name[0] + [matrix_name[1]])) for matrix_name in itertools.product(formulas[time_period][0], formulas['ovt'])]
-            ovt_matrix_names_T = [dict(zip(['skim_mode','time_period','property'], matrix_name[0] + [matrix_name[1]])) for matrix_name in itertools.product(formulas[time_period][1], formulas['ovt'])]
-            ivt = np.add.reduce([get_omx_skim_as_numpy(self.controller, **matrix) for matrix in ivt_matrix_names]) + np.add.reduce([get_omx_skim_as_numpy(self.controller, **matrix) for matrix in ivt_matrix_names_T]).T
-            ovt =  np.add.reduce([get_omx_skim_as_numpy(self.controller, **matrix) for matrix in ovt_matrix_names]) + np.add.reduce([get_omx_skim_as_numpy(self.controller, **matrix) for matrix in ovt_matrix_names_T]).T
-            return ivt, ovt
-        elif mode == 'walk':
-            return np.add.reduce([get_omx_skim_as_numpy(self.controller, *matrix, skim_prop) for matrix in formulas[time_period][0]]) + \
-                np.add.reduce([get_omx_skim_as_numpy(self.controller, *matrix, skim_prop) for matrix in formulas[time_period][1]]).T
-        
-    
-    def skims(self,mode,time_period,skim_prop=None):
+    def skims(self,mode,time_period,skim_prop):
         # TODO all the skim manipulations in https://github.com/BayAreaMetro/travel-model-one/blob/master/model-files/scripts/skims/Accessibility.job
         if len(self._skims[mode][time_period][skim_prop]) == 0:
-            formulas = self.config.__dict__[f'formula_{mode}']
-            skim_prop = formulas['prop']
             if mode == 'auto':
                 if time_period == 'peak':
-
-                    self._skims[mode][time_period][skim_prop] = self.get_summed_skims_from_config(mode, time_period, skim_prop)
+                    self._skims[mode][time_period][skim_prop] = get_omx_skim_as_numpy(
+                        self.controller,
+                        'da',
+                        "AM",
+                        skim_prop
+                    ) + get_omx_skim_as_numpy(
+                        self.controller,
+                        'da',
+                        "PM",
+                        skim_prop
+                    ).T
                 else:
-
-                    self._skims[mode][time_period][skim_prop] = self.get_summed_skims_from_config(mode, time_period, skim_prop)
+                    self._skims[mode][time_period][skim_prop] = get_omx_skim_as_numpy(
+                        self.controller,
+                        'da',
+                        "MD",
+                        skim_prop
+                    ) + get_omx_skim_as_numpy(
+                        self.controller,
+                        'da',
+                        "MD",
+                        skim_prop
+                    ).T
 
             elif mode == 'transit':
                 #TODO need to sum up all the properties....
                 self._skims[mode][time_period][skim_prop] = self.get_transit_skim(
                     mode,
                     time_period,
-                    skim_prop
+                    skim_prop,
                 )
 
-            elif mode == 'walk':
-                distance = self.get_summed_skims_from_config(mode, 'peak', skim_prop)
+            elif mode == 'active':
+                #TODO need to cut off at distance cutoff 
+                distance = get_omx_skim_as_numpy(
+                    self.controller,
+                    'nm',
+                    "MD",
+                    "DISTWALK"
+                ) + get_omx_skim_as_numpy(
+                    self.controller,
+                    'nm',
+                    "MD",
+                    "DISTWALK"
+                ).T
 
-                self._skims[mode][time_period][skim_prop] = np.where(distance > self.config.__dict__['max_walk_distance'], 0, distance)
-                
+                if distance <= self.config.__dict__['max_walk_distance']:
+                    self._skims[mode][time_period][skim_prop] = distance
+                else:
+                    self._skims[mode][time_period][skim_prop] = 0
 
         return self._skims[mode][time_period][skim_prop]
         
@@ -182,8 +191,35 @@ class HomeAccessibility(Component):
             time_period (_type_): _description_
             skim_prop (_type_): _description_
         """
-        ivt, ovt = self.get_summed_skims_from_config(mode, time_period, skim_prop)
-
+        #TODO move skim specs to config
+        if time_period == 'peak':
+            ivt = get_omx_skim_as_numpy(self.controller,'wlk_trn_wlk',"AM",'TOTALIVTT') + \
+                get_omx_skim_as_numpy(self.controller,'wlk_trn_wlk',"PM",'TOTALIVTT').T
+            
+            ovt = get_omx_skim_as_numpy(self.controller,'wlk_trn_wlk',"AM",'FIRSTWAIT') + \
+                get_omx_skim_as_numpy(self.controller,'wlk_trn_wlk',"PM",'FIRSTWAIT').T + \
+                get_omx_skim_as_numpy(self.controller,'wlk_trn_wlk',"AM",'XFERWAIT') + \
+                get_omx_skim_as_numpy(self.controller,'wlk_trn_wlk',"PM",'XFERWAIT').T + \
+                get_omx_skim_as_numpy(self.controller,'wlk_trn_wlk',"AM",'WAUX') + \
+                get_omx_skim_as_numpy(self.controller,'wlk_trn_wlk',"PM",'WAUX').T + \
+                get_omx_skim_as_numpy(self.controller,'wlk',"AM",'WACC') + \
+                get_omx_skim_as_numpy(self.controller,'wlk',"PM",'WACC').T + \
+                get_omx_skim_as_numpy(self.controller,'wlk',"AM",'WEGR') + \
+                get_omx_skim_as_numpy(self.controller,'wlk',"PM",'WEGR').T
+        else:
+            ivt = get_omx_skim_as_numpy(self.controller,'wlk_trn_wlk',"MD",'TOTALIVTT') + \
+                get_omx_skim_as_numpy(self.controller,'wlk_trn_wlk',"MD",'TOTALIVTT').T
+            
+            ovt = get_omx_skim_as_numpy(self.controller,'wlk_trn_wlk',"MD",'FIRSTWAIT') + \
+                get_omx_skim_as_numpy(self.controller,'wlk_trn_wlk',"MD",'FIRSTWAIT').T + \
+                get_omx_skim_as_numpy(self.controller,'wlk_trn_wlk',"MD",'XFERWAIT') + \
+                get_omx_skim_as_numpy(self.controller,'wlk_trn_wlk',"MD",'XFERWAIT').T + \
+                get_omx_skim_as_numpy(self.controller,'wlk_trn_wlk',"MD",'WAUX') + \
+                get_omx_skim_as_numpy(self.controller,'wlk_trn_wlk',"MD",'WAUX').T + \
+                get_omx_skim_as_numpy(self.controller,'wlk',"MD",'WACC') + \
+                get_omx_skim_as_numpy(self.controller,'wlk',"MD",'WACC').T + \
+                get_omx_skim_as_numpy(self.controller,'wlk',"MD",'WEGR') + \
+                get_omx_skim_as_numpy(self.controller,'wlk',"MD",'WEGR').T
             
         return (ivt + self.config.__dict__['out_of_vehicle_time_weight'] * ovt)/100
 
@@ -229,7 +265,7 @@ class HomeAccessibility(Component):
             NumpyArray: 1-d zone-based numpy array of the logsum size of the attractions available to
                 each zone, weighted by how hard it is to get to the attractions. 
         """
-        
+
         size = attraction * np.exp(decay_factor * impedance)
 
         # Set size of zero-impedance entries in either direction to zero 
@@ -243,33 +279,19 @@ class HomeAccessibility(Component):
     
 
     def run(self):
-        modes = [
-        'auto',
-        'transit',
-        'walk'
-            ]
-        
-        
+        modes = ['auto','transit','active']
         time_periods = ['peak','offpeak']
         attraction_type = ['total','retail']
-        
         _mode_period_type = itertools.product(modes,time_periods,attraction_type)
         self.zones = self.emme_scenario.zone_numbers
 
         for _mode,_period,_type in _mode_period_type:
-            formulas = self.config.__dict__[f'formula_{_mode}']
-            self.logsums_df[f'{self.config.mode_names[_mode]}{_period.title()}{_type.title()}'] = HomeAccessibility.origin_logsum(
+            self.logsums_df[f'{_mode}_{_period}_{_type}'] = HomeAccessibility.origin_logsum(
                 self.employment_df[_type].values,
-                self.skims(mode=_mode,time_period=_period,skim_prop=formulas['prop']),
+                self.skims(mode=_mode,time_period=_period,skim_prop='time'),
                 self.config.__dict__[f'dispersion_{_mode}'],
             )
-            
-        self.logsums_df.index.name = 'taz'
-        self.logsums_df.index = self.logsums_df.index + 1
-        
-        # drop peak vs. off peak columns for non-motorized
-        self.logsums_df.drop(['nonMotorizedOffpeakTotal','nonMotorizedOffpeakRetail'], axis = 1, inplace = True)
-        self.logsums_df.rename(columns = {'nonMotorizedPeakTotal':'nonMotorizedTotal','nonMotorizedPeakRetail':'nonMotorizedRetail'}, inplace = True)
+
         self.logsums_df.to_csv(self.get_abs_path(self.config.outfile))
 
     @property

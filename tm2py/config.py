@@ -98,9 +98,7 @@ class RunConfig(ConfigItem):
     initial_components: Tuple[ComponentNames, ...]
     global_iteration_components: Tuple[ComponentNames, ...]
     final_components: Tuple[ComponentNames, ...]
-    ctramp_run_dir: str
     host_ip_address: str
-    sample_rate_iteration: list
     start_iteration: int = Field(ge=0)
     end_iteration: int = Field(gt=0)
     start_component: Optional[Union[ComponentNames, EmptyString]] = Field(default="")
@@ -503,12 +501,6 @@ class HomeAccessibilityConfig(ConfigItem):
 
     outfile: pathlib.Path
     land_use_aggregation: Dict[str, list]
-    formula_auto: Dict[str, Union[str,List[str], List]]
-    formula_transit: Dict[str, Union[str,List[str], List]]
-    formula_walk: Dict[str, Union[str,List[str], List]]
-    
-    mode_names: Dict[str, str]
-    
     dispersion_auto: float = -0.05
     dispersion_transit: float = -0.05
     dispersion_walk: float = -1.00
@@ -607,24 +599,12 @@ class ActiveModeShortestPathSkimConfig(ConfigItem):
 
 
 @dataclass(frozen=True)
-class ActiveModeClassConfig(ConfigItem):
-    """Active mode skim entry for accessibility calculations only."""
-    
-    name: str
-    description: str
-    mode_code: str
-    skims: Tuple[str, ...] = Field()
-
-@dataclass(frozen=True)
 class ActiveModesConfig(ConfigItem):
     """Active Mode skim parameters."""
 
     emme_scenario_id: int
     shortest_path_skims: Tuple[ActiveModeShortestPathSkimConfig, ...]
-    classes: Tuple[ActiveModeClassConfig, ...]
-    output_skim_path: str
-    output_skim_filename_tmpl: str
-    output_skim_matrixname_tmpl: str
+
 
 @dataclass(frozen=True)
 class HighwayCapClassConfig(ConfigItem):

@@ -214,7 +214,7 @@ class AirPassenger(Component):
             airport=airport, year=year, direction=direction
         )
 
-        return self.get_abs_path((self.config.input_demand_folder) / _file_name)
+        return self.get_abs_path(self.config.input_demand_folder) / _file_name
 
     def _get_air_demand_for_year(self, year) -> pd.DataFrame:
         """Creates a dataframe of concatenated data from CSVs for all airport x direction combos.

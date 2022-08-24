@@ -36,7 +36,7 @@
     log_file_level = "DETAIL"
     log_on_error_file_path = "log_error.txt"
     notify_slack = false
-    use_emme_logbook = false
+    use_emme_logbook = true
 
 [household]
     highway_demand_file = "demand_matrices/highway/household/TAZ_Demand_{period}.omx"
@@ -44,36 +44,9 @@
 
 [accessibility]
     outfile = "inputs/accessibility.csv"
-
     [accessibility.land_use_aggregation]
         "RETEMPN" = ["RETEMPN"]
         "TOTEMP" = ["TOTEMP"]
-	[accessibility.mode_names]
-		"auto" = "auto"
-		"transit" = "transit"
-		"walk" = "nonMotorized"
-	[accessibility.formula_auto]
-		# second element of list contains matrices to be transposed
-		# formatted as a list of [mode name, time period]
-		"peak" = [[['DA','AM']],
-			[['DA', 'PM']]]
-		"offpeak" = [[['DA','MD']],
-			[['DA', 'MD']]]
-		"prop" = 'TIME'
-	[accessibility.formula_transit]
-		"peak" = [[['wlk_trn_wlk','AM']],
-			[['wlk_trn_wlk', 'PM']]]
-		"offpeak" = [[['wlk_trn_wlk','MD']], 
-			[['wlk_trn_wlk', 'MD']]]
-		"ivt" = ["IVT"]
-		"ovt" = ['IWAIT', 'XWAIT','WAUX']
-		"prop" = 'TIME'
-	[accessibility.formula_walk]
-		"peak" = [[['WALK','MD']],
-			[['WALK','MD']]]
-		"offpeak" = [[['WALK','MD']],
-			[['WALK','MD']]]
-		"prop" = 'DIST'
 
 [air_passenger]
     output_trip_table_directory = "demand_matrices/highway/air_passenger"
@@ -463,25 +436,7 @@
 
 [active_modes]
     emme_scenario_id = 1
-	output_skim_path = "skims/active"
-    output_skim_filename_tmpl = "nonmotskm.omx"
-    output_skim_matrixname_tmpl = "{property}{mode}"
-	
-	[[active_modes.classes]]
-	# for accessibility calculations
-        name = "WALK"
-        description = "walk"
-        mode_code = "nmw"
-        skims = ["DIST"]
-	
-	[[active_modes.classes]]
-	# for accessibility calculations
-        name = "BIKE"
-        description = "bike"
-        mode_code = "nmb"
-        skims = ["DIST"]
-	
-	[[active_modes.shortest_path_skims]]
+    [[active_modes.shortest_path_skims]]
         mode = "walk"
         roots = "MAZ"
         leaves = "MAZ"
@@ -517,11 +472,10 @@
         max_dist_miles = 0.5
         output = "skims/non_motorized/ped_distance_tap_tap.txt"
 
-
 [highway]
     output_skim_path = "skims/highway"
     output_skim_filename_tmpl = "HWYSKM{time_period}.omx"
-    output_skim_matrixname_tmpl = "{property}{mode}"
+    output_skim_matrixname_tmpl = "{time_period}_{mode}_{property}"
     relative_gap = 0.0005
     max_iterations = 100
     run_maz_assignment = false
@@ -565,15 +519,14 @@
             counties = ["Solano", "Napa", "Sonoma", "Marin"]
 
     [[highway.classes]]
-        name = "DA"
+        name = "da"
         description = "drive alone"
         mode_code = "d"
         excluded_links = [ "is_sr",]
         value_of_time = 18.93
         operating_cost_per_mile = 17.23
         toll = [ "@bridgetoll_da" ]
-        #skims = [ "time", "dist", "freeflowtime", "bridgetoll",]
-		 skims = [ "TIME", "DIST", "freeflowtime", "BTOLL",]
+        skims = [ "time", "dist", "freeflowtime", "bridgetoll",]
         [[highway.classes.demand]]
             source = "household"
             name = "da"
@@ -592,8 +545,7 @@
         operating_cost_per_mile = 17.23
         toll = [ "@bridgetoll_sr2" ]
         toll_factor = 0.5714285714285714
-        #skims = [ "time", "dist", "freeflowtime", "bridgetoll", "hovdist",]
-		skims = [ "TIME", "DIST", "freeflowtime", "BTOLL","hovdist"]
+        skims = [ "time", "dist", "freeflowtime", "bridgetoll", "hovdist",]
         [[highway.classes.demand]]
             source = "household"
             name = "sr2"
@@ -613,8 +565,7 @@
         operating_cost_per_mile = 17.23
         toll = ["@bridgetoll_sr3"]
         toll_factor = 0.4
-        #skims = [ "time", "dist", "freeflowtime", "bridgetoll", "hovdist",]
-		skims = [ "TIME", "DIST", "freeflowtime", "BTOLL","hovdist"]
+        skims = [ "time", "dist", "freeflowtime", "bridgetoll", "hovdist",]
         [[highway.classes.demand]]
             source = "household"
             name = "sr3"
@@ -633,8 +584,7 @@
         value_of_time = 37.87
         operating_cost_per_mile = 31.28
         toll = ["@bridgetoll_sml"]
-        #skims = [ "time", "dist", "freeflowtime", "bridgetoll_vsm", "bridgetoll_sml", "bridgetoll_med",]
-		skims = [ "TIME", "DIST", "freeflowtime", "bridgetoll_vsm", "bridgetoll_sml", "bridgetoll_med",]
+        skims = [ "time", "dist", "freeflowtime", "bridgetoll_vsm", "bridgetoll_sml", "bridgetoll_med",]
         [[highway.classes.demand]]
             source = "truck"
             name = "vsmtrk"
@@ -653,8 +603,7 @@
         operating_cost_per_mile = 31.28
         toll = ["@bridgetoll_lrg"]
         pce = 2.0
-        #skims = [ "time", "dist", "freeflowtime", "bridgetoll_lrg",]
-		skims = [ "TIME", "DIST", "freeflowtime", "bridgetoll_lrg",]
+        skims = [ "time", "dist", "freeflowtime", "bridgetoll_lrg",]
         [[highway.classes.demand]]
             source = "truck"
             name = "lrgtrk"
@@ -676,7 +625,7 @@
     capacitated_transit_assignment = false
     station_capacity_transit_assignment = false
     output_skim_path = "skims/transit"
-    output_skim_filename_tmpl = "trnskm{time_period}_{mode}.omx"
+    output_skim_filename_tmpl = "{time_period}_{mode}.omx"
     output_skim_matrixname_tmpl = "{property}"
     output_stop_usage_path = "output_summaries\\stop_usage_{period}.csv"
     output_transit_boardings_path = "output_summaries\\boardings_by_line_{period}.csv"
@@ -713,7 +662,6 @@
         name = "wlk_trn_knr"
         description = "walk access to transit, knr egress from transit" 
         skims = ['BOARDS', 'DDIST', 'DTIME', 'FARE', 'IVT', 'IVTCOM', 'IVTEXP', 'IVTFRY', 'IVTHVY', 'IVTLOC', 'IVTLRT', 'IWAIT', 'PIVTCOM', 'PIVTEXP', 'PIVTFRY', 'PIVTHVY', 'PIVTLOC', 'PIVTLRT', 'WACC', 'WAIT', 'WAUX', 'WEGR', 'XWAIT']
-
 
 [emme]
     num_processors = "MAX-1"
