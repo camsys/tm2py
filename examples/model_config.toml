@@ -227,7 +227,7 @@
     [[truck.trip_dist.classes]]
         name = "vsmtrk"
         impedance = "trk"
-        use_k_factors = false
+        use_k_factors = true
     [[truck.trip_dist.classes]]
         name = "smltrk"
         impedance = "trk"

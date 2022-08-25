@@ -5,7 +5,7 @@
 [scenario]
     year = 2015
     verify = false
-    landuse_file = "landuse/tazData.csv"
+    landuse_file = "inputs/landuse/tazData.csv"
     landuse_index_column = "ZONE"
     landuse_index_in_network_column = "@taz_id"
     landuse_total_population_column = "TOTPOP"

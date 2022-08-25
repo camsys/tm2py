@@ -6,6 +6,7 @@ import os, pathlib, itertools
 from tm2py.components.component import Component
 from tm2py.logger import LogStartEnd
 from tm2py.tools import run_process
+from tm2py.components.network.postprocess_hwy_skims import HighwayPostprocessor
 
 
 class HouseholdModel(Component):
@@ -28,7 +29,9 @@ class HouseholdModel(Component):
             6. Cleans up CTRAMP java.
             7. Moves outputs to main model directory if ctramp_run_dir is different from the main model directory
         """
-        #self._move_inputs_to_run_dir()
+
+        self._move_inputs_to_run_dir()
+        self._highway_postprocess()
         self._update_telecommute_constants()
         self._start_household_manager()
         self._start_matrix_manager()
@@ -37,6 +40,14 @@ class HouseholdModel(Component):
         self._run_resident_model()
         self._stop_java()
         self._move_outputs_to_main_dir()
+        
+    def _highway_postprocess(self):
+        """
+        Temporary fix for now until the zone system is updated.
+        """
+        skim_path = pathlib.Path(self.controller.config.run.ctramp_run_dir) / 'skims'
+        hp = HighwayPostprocessor(skim_path, skim_path)
+        hp.update_skim_values()
         
     def _move_inputs_to_run_dir(self):
         if not os.path.samefile(self.controller.config.run.ctramp_run_dir,
@@ -58,9 +69,8 @@ class HouseholdModel(Component):
             )
             
             dst_file = pathlib.Path(dst_dir) / os.path.basename(src_file)
-            if os.path.exists(dst_file):
-                os.remove(dst_file)
-            _shutil.copy(src_file, dst_file)
+            if not os.path.exists(dst_file):
+                _shutil.copy(src_file, dst_file)
             
             # Move skims
             dst_dir = pathlib.Path(root_dst_dir) / 'skims'
@@ -108,6 +118,13 @@ class HouseholdModel(Component):
             if os.path.exists(dst_file):
                 os.remove(dst_file)
             _shutil.copy(src_file, dst_file)
+            
+            # taz_centroids.csv
+            src_file = pathlib.Path(root_src_dir) / 'inputs/hwy/taz_centroids.csv'
+            dst_file = dst_dir = pathlib.Path(root_dst_dir) / 'skims/taz_centroids.csv'
+            if not os.path.exists(dst_file):
+                _shutil.copy(src_file, dst_file)
+
             
     def _move_outputs_to_main_dir(self):
         pass
