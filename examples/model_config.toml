@@ -853,7 +853,7 @@
         value_of_time = 29.92
         operating_cost_per_mile = 24.71
         toll = [ "@bridgetoll_sml", "@valuetoll_sml" ]
-        skims = [ "time", "dist", "freeflowtime", "btoll_vsm", "btoll_sml", "btoll_med", "vtoll_vsm", "vtoll_sml", "vtoll_med", "gctime", "cost", ]
+        skims = [ "time", "dist", "freeflowtime", "btoll_vsm", "btoll_sml", "btoll_med", "gctime", "cost", ]
         output_skim_matrixname_tmpl = "{property_name}{class_name}"
         [[highway.classes.demand]]
             source = "truck"
@@ -865,7 +865,7 @@
             source = "truck"
             name = "medtrk"
     [[highway.classes]]
-        name = "lrg"
+        name = "lrgtrk"
         description = "large truck"
         mode_code = "l"
         excluded_links = ["is_auto_only"]
@@ -873,7 +873,7 @@
         operating_cost_per_mile = 24.71
         toll = [ "@bridgetoll_lrg", "@valuetoll_lrg" ]
         pce = 2.0
-        skims = [ "time", "dist", "freeflowtime", "btoll", "vtoll", "gctime", "cost", ]
+        skims = [ "time", "dist", "freeflowtime", "btoll_lrg", "gctime", "cost", ]
         output_skim_matrixname_tmpl = "{property_name}{class_name}"
         [[highway.classes.demand]]
             source = "truck"
