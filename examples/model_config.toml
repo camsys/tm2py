@@ -295,7 +295,7 @@
         balance_to = "productions"
         [truck.trip_gen.classes.production_formula]
             constant = 0
-            multiplier = 0.96
+            multiplier = 0.4
             [[truck.trip_gen.classes.production_formula.land_use_rates]]
                 property = 'RETEMPN'
                 coeff = 0.95409
