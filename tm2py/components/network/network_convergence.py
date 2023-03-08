@@ -26,7 +26,7 @@ class ConvergenceReport(Component):
         self.config =  self.controller.config
 
     def run(self):
-        #self.save_results()
+        self.save_results()
         if self.controller.iteration > 1:
             self.export_summaries()
         

@@ -20,19 +20,18 @@
         "highway",
         "prepare_network_transit",
         "transit",
-        "convergence_report"
     ]
     global_iteration_components = [
-        #"home_accessibility",
-        # "household", 
-        # "truck",
-        # "highway",
-        # "transit",
-        #"convergence_report"
+        "home_accessibility",
+         "household", 
+         "truck",
+         "highway",
+         "transit",
+         "convergence_report"
     ]
     final_components = []
     start_iteration = 0
-    end_iteration = 1
+    end_iteration = 3
 
     [run.warmstart]
         warmstart = true
