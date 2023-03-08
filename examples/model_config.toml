@@ -58,7 +58,7 @@
 	copy_from_examples = false
     host_ip_address = "10.1.36.121"
     ctramp_run_dir = 'D:\MTC\9-county\CTRAMP'
-    sample_rate_iteration = [0.50]
+    sample_rate_iteration = [0.15, 0.30, 1.0]
 
     [household.rideshare_mode_split]
         "taxi"=0.08
@@ -920,10 +920,10 @@
 			modes = ["trk", "lrgtrk"]
 		[[highway.convergence.summary_mode_group]]
 			name = "HOV"
-			modes = ["s2h", "s3h"]
+			modes = ["s2h", "s2l", "s2m", "s2xh", "s3h", "s3l", "s3m", "s3xh"]
 		[[highway.convergence.summary_mode_group]]
 			name = "Drive alone"
-			modes = ["dah"]
+			modes = ["dah", "dal", "dam", "daxh"]
 		
 		
 
