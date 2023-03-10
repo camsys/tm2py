@@ -1205,6 +1205,7 @@ class TransitConfig(ConfigItem):
     initial_wait_perception_factor: float
     transfer_wait_perception_factor: float
     walk_perception_factor: float
+    walk_perception_factor_cbd: float
     drive_perception_factor: float
     
     max_transfers: int
@@ -1225,7 +1226,9 @@ class TransitConfig(ConfigItem):
     output_skim_matrixname_tmpl: str = Field()
     output_transit_boardings_path: str = Field()
     output_shapefile_path: str = Field()
+    output_transit_segment_path: str = Field()
     output_station_to_station_flow_path: str = Field()
+    output_trimmed_demand: str = Field()
     classes: Tuple[TransitClassConfig, ...] = Field()
     use_ccr: bool = False
     congested_transit_assignment: bool = False

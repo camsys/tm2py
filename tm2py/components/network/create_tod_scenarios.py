@@ -181,17 +181,17 @@ class CreateTODScenarios(Component):
                     if ref_scenario.extra_attribute(name) is None:
                         ref_scenario.create_extra_attribute(domain, name)
             network = ref_scenario.get_network()           
-            # auto_network = self._ref_auto_network    
-            # # copy link attributes from auto network to transit network
-            # link_lookup = {}
-            # for link in auto_network.links():
-            #     link_lookup[link["#link_id"]] = link
-            # for link in network.links():
-            #     auto_link = link_lookup.get(link["#link_id"])
-            #     if not auto_link:
-            #         continue
-            #     for attr in ["@area_type", "@capclass", "@free_flow_speed", "@free_flow_time"]:
-            #         link[attr] = auto_link[attr]
+            auto_network = self._ref_auto_network    
+            # copy link attributes from auto network to transit network
+            link_lookup = {}
+            for link in auto_network.links():
+                link_lookup[link["#link_id"]] = link
+            for link in network.links():
+                auto_link = link_lookup.get(link["#link_id"])
+                if not auto_link:
+                    continue
+                for attr in ["@area_type", "@capclass", "@free_flow_speed", "@free_flow_time"]:
+                    link[attr] = auto_link[attr]
 
             mode_table = self.controller.config.transit.modes
 
@@ -208,6 +208,7 @@ class CreateTODScenarios(Component):
             default_transfer_wait_perception_factor = self.controller.config.transit.get("transfer_wait_perception_factor", 1)
 
             walk_perception_factor = self.controller.config.transit.get("walk_perception_factor", 2)
+            walk_perception_factor_cbd = self.controller.config.transit.get("walk_perception_factor_cbd", 1)
             drive_perception_factor = self.controller.config.transit.get("drive_perception_factor", 2)
             
             for mode_data in mode_table:
@@ -222,7 +223,7 @@ class CreateTODScenarios(Component):
                     if mode_data['type'] == "DRIVE":
                         mode.speed = "ul1*%s" % drive_perception_factor
                     else:
-                        mode.speed = float(mode_data['speed_miles_per_hour'])/walk_perception_factor
+                        mode.speed = mode_data['speed_miles_per_hour']
                 in_vehicle_factors[mode.id] = mode_data.get(
                     "in_vehicle_perception_factor", default_in_vehicle_factor)
                 initial_boarding_penalty[mode.id] = mode_data.get(
@@ -237,18 +238,17 @@ class CreateTODScenarios(Component):
             # set fixed guideway times, and initial free flow auto link times
             # TODO: cntype_speed_map to config
             cntype_speed_map = {"CRAIL": 45.0, "HRAIL": 40.0, "LRAIL": 30.0, "FERRY": 15.0}
+            walk_speed = 3.0
             for link in network.links():
                 speed = cntype_speed_map.get(link["#cntype"])
                 if speed is None:
-                    # speed = link["@free_flow_speed"]
-                    speed = 30.0 # fix it later
+                    speed = link["@free_flow_speed"]
                     if link["@ft"] == 1 and speed > 0:
                         link["@trantime"] = 60 * link.length / speed
                     elif speed > 0:
                         link["@trantime"] = 60 * link.length / speed + link.length * 5 * 0.33
                 else:
                     link["@trantime"] = 60 * link.length / speed
-                # link.data1 = link["@trantime"]
 
             for line in network.transit_lines():
                 # TODO: may want to set transit line speeds (not necessarily used in the assignment though)
@@ -279,8 +279,15 @@ class CreateTODScenarios(Component):
                     link.modes = "e"
                 elif (link.i_node.is_centroid or link.j_node.is_centroid ) and (link["@drive_link"]!=0):
                     link.modes = set([network.mode('c'), network.mode('D')])  
+                # calculate perceived walk time
+                # perceived walk time will be used in walk mode definition "ul2", 
+                # link.data1 is used to save congested bus time, so use link.data2 here
+                if link["@area_type"] in [0,1]:
+                    link.data2 = 60 * link.length / (walk_speed / walk_perception_factor_cbd)
+                else:
+                    link.data2 = 60 * link.length / (walk_speed / walk_perception_factor)
 
-              # set headway fraction, transfer wait perception and transfer boarding penalty at specific nodes
+            # set headway fraction, transfer wait perception and transfer boarding penalty at specific nodes
             for line in network.transit_lines():
                 if line.vehicle.mode.id == "r":
                     for seg in line.segments():

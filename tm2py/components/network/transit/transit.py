@@ -69,13 +69,11 @@ def calc_segment_cost(transit_volume, capacity, segment):
     seated_capacity = line.vehicle.seated_capacity * {0} * 60 / line.headway
     num_seated = min(transit_volume, seated_capacity)
     num_standing = max(transit_volume - seated_capacity, 0)
-
     vcr = transit_volume / capacity
     crowded_factor = (((
            (min_seat_weight+(max_seat_weight-min_seat_weight)*(vcr)**power_seat_weight)*num_seated
            +(min_stand_weight+(max_stand_weight-min_stand_weight)*(vcr)**power_stand_weight)*num_standing
            )/(transit_volume)))
-
     # Toronto implementation limited factor between 1.0 and 10.0
     return max(crowded_factor, 1.0) - 1.0
 """
@@ -288,6 +286,8 @@ class TransitAssignment(Component):
                 # if self.controller.config.transit.get("output_shapefile_path"): need further test
                 #     data_explorer.replace_primary_scenario(scenario)
                 #     self.export_segment_shapefile(emme_app, period)
+                if self.controller.config.transit.get("output_transit_segment_path"):
+                    self.export_transit_segment(scenario, period, use_fares)
                 if self.controller.config.transit.get("output_stop_usage_path"):
                     self.export_connector_flows(scenario, period)
                 if self.controller.config.transit.get("output_station_to_station_flow_path"):
@@ -971,7 +971,6 @@ class TransitAssignment(Component):
                 "normalized_gap": 0.01,
                 "relative_gap": 0.001
             }
-
             assign_transit(
                 specs,
                 congestion_function=func,
@@ -1067,21 +1066,23 @@ class TransitAssignment(Component):
 
             spec = {
                 "type": "EXTENDED_TRANSIT_MATRIX_RESULTS",
-                "by_mode_subset": {"modes": ["w"], "actual_aux_transit_times": 'mf"%s_WAUX"' % skim_name}, #https://github.com/BayAreaMetro/modeling-website/wiki/TransitSkims
-            }
-            spec1 = {
-                "type": "EXTENDED_TRANSIT_MATRIX_RESULTS",
                 "by_mode_subset": {"modes": ["D"], 
                 "actual_aux_transit_times": 'mf"%s_DTIME"' % skim_name,
                 "distance": 'mf"%s_DDIST"' % skim_name},
             }
+            # skim walk distance in walk time matrices first, 
+            # will calculate the actual walk time and overwrite the distance in the following steps
+            spec1 = {
+                "type": "EXTENDED_TRANSIT_MATRIX_RESULTS",
+                "by_mode_subset": {"modes": ["w"], "distance": 'mf"%s_WAUX"' % skim_name}, #https://github.com/BayAreaMetro/modeling-website/wiki/TransitSkims
+            }
             spec2 = {
                 "type": "EXTENDED_TRANSIT_MATRIX_RESULTS",
-                "by_mode_subset": {"modes": ["a"], "actual_aux_transit_times": 'mf"%s_WACC"' % skim_name},
+                "by_mode_subset": {"modes": ["a"], "distance": 'mf"%s_WACC"' % skim_name},
             }
             spec3 = {
                 "type": "EXTENDED_TRANSIT_MATRIX_RESULTS",
-                "by_mode_subset": {"modes": ["e"], "actual_aux_transit_times": 'mf"%s_WEGR"' % skim_name},
+                "by_mode_subset": {"modes": ["e"], "distance": 'mf"%s_WEGR"' % skim_name},
             }
             matrix_results(
                 spec,
@@ -1108,9 +1109,10 @@ class TransitAssignment(Component):
                 num_processors=num_processors,
             )
 
-            walk_perception_factor = self.controller.config.transit.get("walk_perception_factor", 2)
             drive_perception_factor = self.controller.config.transit.get("drive_perception_factor", 2)
-            # divide drive and walk time by mode specific perception factor to get the actual time
+            walk_speed = 3.0
+            # divide drive time by mode specific perception factor to get the actual time
+            # for walk time, use walk distance/walk speed
             # because the mode specific perception factors are hardcoded in the mode definition
             spec_list = [
                 {
@@ -1123,19 +1125,19 @@ class TransitAssignment(Component):
                     "type": "MATRIX_CALCULATION",
                     "constraint": None,
                     "result": f'mf"{skim_name}_WAUX"',
-                    "expression": f'mf"{skim_name}_WAUX"/{walk_perception_factor}',
+                    "expression": f'mf"{skim_name}_WAUX"/({walk_speed}/60)',
                 },
                 {
                     "type": "MATRIX_CALCULATION",
                     "constraint": None,
                     "result": f'mf"{skim_name}_WACC"',
-                    "expression": f'mf"{skim_name}_WACC"/{walk_perception_factor}',
+                    "expression": f'mf"{skim_name}_WACC"/(({walk_speed}/60)',
                 },
                 {
                     "type": "MATRIX_CALCULATION",
                     "constraint": None,
                     "result": f'mf"{skim_name}_WEGR"',
-                    "expression": f'mf"{skim_name}_WEGR"/{walk_perception_factor}',
+                    "expression": f'mf"{skim_name}_WEGR"/(({walk_speed}/60)',
                 },
             ]
             matrix_calc(spec_list, scenario=scenario, num_processors=num_processors)
@@ -1479,6 +1481,96 @@ class TransitAssignment(Component):
                                                 ]]))
                 f.write("\n")
 
+    def export_transit_segment(self, scenario, period, use_fares):
+        # add total boardings by access mode
+        modeller = self.controller.emme_manager.modeller()
+        network_results = modeller.tool(
+            "inro.emme.transit_assignment.extended.network_results"
+        )
+        create_extra = modeller.tool(
+            "inro.emme.data.extra_attribute.create_extra_attribute"
+        )
+        skim_sets = [
+            ("PNR_TRN_WLK", "PNR access and Walk egress"),
+            ("WLK_TRN_PNR", "Walk access and PNR egress"),
+            ("KNR_TRN_WLK", "KNR access and Walk egress"),
+            ("WLK_TRN_KNR", "Walk access and KNR egress"),
+            ("WLK_TRN_WLK", "Walk access and Walk egress"),
+        ]
+        for name, set_desc in skim_sets:
+            attr_name = f"@board_{name}".lower()
+            create_extra("TRANSIT_SEGMENT", attr_name, overwrite=True, scenario=scenario)
+            spec = {
+                "type": "EXTENDED_TRANSIT_NETWORK_RESULTS",
+                "on_segments": {"total_boardings": attr_name}
+            }
+            network_results(spec, class_name=name, scenario=scenario)
+
+        network = scenario.get_network()
+        path_boardings = self.get_abs_path(self.controller.config.transit.output_transit_segment_path)
+        with open(path_boardings.format(period=period.name), "w") as f:
+            f.write(",".join(["line", 
+                            "stop_name",
+                            "i_node", 
+                            "j_node",
+                            "dwt",
+                            "ttf", 
+                            "voltr", 
+                            "board", 
+                            "con_time", 
+                            "uncon_time", 
+                            "mode", 
+                            "src_mode",
+                            "mdesc", 
+                            "hdw", 
+                            "orig_hdw", 
+                            "speed", 
+                            "vauteq", 
+                            "vcaps", 
+                            "vcapt", 
+                            "board_ptw",
+                            "board_wtp",
+                            "board_ktw",
+                            "board_wtk",
+                            "board_wtw"
+                            ]))
+            f.write("\n")
+
+            for line in network.transit_lines():
+                for segment in line.segments(include_hidden=True):
+                    if use_fares:
+                        mode = segment.line['#src_mode']
+                    else:
+                        mode = segment.line.mode 
+                    f.write(",".join([str(x) for x in [
+                                                    segment.id,
+                                                    segment['#stop_name'],
+                                                    segment.i_node, 
+                                                    segment.j_node, 
+                                                    segment.dwell_time, 
+                                                    segment.transit_time_func, 
+                                                    segment.transit_volume,
+                                                    segment.transit_boardings, 
+                                                    segment.transit_time, 
+                                                    segment['@trantime_seg'], 
+                                                    segment.line.mode, 
+                                                    mode,
+                                                    segment.line.mode.description,
+                                                    segment.line.headway,
+                                                    segment.line['@orig_hdw'],
+                                                    segment.line.speed,
+                                                    segment.line.vehicle.auto_equivalent,
+                                                    segment.line.vehicle.seated_capacity,
+                                                    segment.line.vehicle.total_capacity,
+                                                    segment['@board_pnr_trn_wlk'],
+                                                    segment['@board_wlk_trn_pnr'],
+                                                    segment['@board_knr_trn_wlk'],
+                                                    segment['@board_wlk_trn_knr'],
+                                                    segment['@board_wlk_trn_wlk'],
+                                                    ]]))
+                    f.write("\n")
+
+
     def export_segment_shapefile(self, emme_app, period):
         project = emme_app.project
         path_shapefile = self.get_abs_path(self.controller.config.transit.output_shapefile_path)
@@ -1614,8 +1706,11 @@ class TransitAssignment(Component):
         self.controller.emme_manager.logbook_write(title, report.render())
 
     def trim_demands(self, scenario, period):
+        emmebank = scenario.emmebank
+        iteration = self.controller.iteration
         modeller = self.controller.emme_manager.modeller()
         num_processors = self._num_processors
+        output_file_name = self.get_abs_path(self.controller.config.transit.output_trimmed_demand)
         matrix_calc = modeller.tool("inro.emme.matrix_calculation.matrix_calculator")
         class_name = [
             "PNR_TRN_WLK",
@@ -1624,12 +1719,17 @@ class TransitAssignment(Component):
             "WLK_TRN_KNR",
             "WLK_TRN_WLK"
         ]
+        report = []
         with self.controller.emme_manager.logbook_trace(
                 "Trim of demand tables based on extended transit assignment "
         ):
             for name in class_name:
                 skim_name = "%s_%s" % (period.name, name)
                 demand_name = "%s_%s" % (name, period.name)
+                # get previous demand
+                matrix = emmebank.matrix(f'mf"{demand_name}"')
+                prev_demand = matrix.get_numpy_data(scenario.id)
+
                 spec_list = [
                 {  # initialize TRIM skim
                     "type": "MATRIX_CALCULATION",
@@ -1658,6 +1758,15 @@ class TransitAssignment(Component):
                 },
                 ]
                 matrix_calc(spec_list, scenario=scenario, num_processors=num_processors)
+
+                # get current demand, report trimmed demand
+                matrix = emmebank.matrix(f'mf"{demand_name}"')
+                current_demand = matrix.get_numpy_data(scenario.id)
+                trimmed_demand = np.sum(prev_demand) - np.sum(current_demand)
+                report.append((name,trimmed_demand))
+            pd.DataFrame(report).to_csv(output_file_name.format(period=period.name, iteration=iteration), 
+                                        index=False,
+                                        header=['class','trimmed_demand'])
 
     def export_boardings_by_station(self, network, use_fares, period, scenario):
         modeller = self.controller.emme_manager.modeller()

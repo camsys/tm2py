@@ -933,6 +933,7 @@
     initial_wait_perception_factor = 1.5
     transfer_wait_perception_factor = 3.0
     walk_perception_factor = 2.0
+    walk_perception_factor_cbd = 1.0
     drive_perception_factor = 6.0
     max_transfers = 3
     output_skim_path = "skims/transit"
@@ -941,6 +942,7 @@
     output_stop_usage_path = "output_summaries\\stop_usage_{period}.csv"
     output_transit_boardings_path = "output_summaries\\boardings_by_line_{period}.csv"
     output_shapefile_path = "output_summaries\\{period}_assn.shp"
+    output_transit_segment_path = "output_summaries\\transit_segment_{period}.csv"
     output_station_to_station_flow_path = "output_summaries\\{operator}_station_to_station_{set_name}_{period}.txt"
     fares_path = "inputs\\trn\\fares.far"
     fare_matrix_path = "inputs\\trn\\fareMatrix.txt"
@@ -958,6 +960,7 @@
     # transit assignment methods
     congested_transit_assignment = true
     trim_demand_before_congested_transit_assignment = true
+    output_trimmed_demand = "output_summaries\\trimmed_demand_{period}_{iteration}.csv"
     use_ccr = false
     # peaking factor option
     use_peaking_factor = true
@@ -1532,19 +1535,19 @@
     name = "walk"
     type = "WALK"
     assign_type = "AUX_TRANSIT"
-    speed_miles_per_hour = 3.0
+    speed_miles_per_hour = "ul2*1"
 [[transit.modes]]
     mode_id = "a"
     name = "access"
     type = "ACCESS"
     assign_type = "AUX_TRANSIT"
-    speed_miles_per_hour = 3.0
+    speed_miles_per_hour = "ul2*1"
 [[transit.modes]]
     mode_id = "e"
     name = "egress"
     type = "EGRESS"
     assign_type = "AUX_TRANSIT"
-    speed_miles_per_hour = 3.0
+    speed_miles_per_hour = "ul2*1"
 [[transit.modes]]
     mode_id = "p"
     name = "pnrdummy"
