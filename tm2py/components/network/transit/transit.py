@@ -69,11 +69,13 @@ def calc_segment_cost(transit_volume, capacity, segment):
     seated_capacity = line.vehicle.seated_capacity * {0} * 60 / line.headway
     num_seated = min(transit_volume, seated_capacity)
     num_standing = max(transit_volume - seated_capacity, 0)
+
     vcr = transit_volume / capacity
     crowded_factor = (((
            (min_seat_weight+(max_seat_weight-min_seat_weight)*(vcr)**power_seat_weight)*num_seated
            +(min_stand_weight+(max_stand_weight-min_stand_weight)*(vcr)**power_stand_weight)*num_standing
            )/(transit_volume)))
+
     # Toronto implementation limited factor between 1.0 and 10.0
     return max(crowded_factor, 1.0) - 1.0
 """
@@ -1131,13 +1133,13 @@ class TransitAssignment(Component):
                     "type": "MATRIX_CALCULATION",
                     "constraint": None,
                     "result": f'mf"{skim_name}_WACC"',
-                    "expression": f'mf"{skim_name}_WACC"/(({walk_speed}/60)',
+                    "expression": f'mf"{skim_name}_WACC"/({walk_speed}/60)',
                 },
                 {
                     "type": "MATRIX_CALCULATION",
                     "constraint": None,
                     "result": f'mf"{skim_name}_WEGR"',
-                    "expression": f'mf"{skim_name}_WEGR"/(({walk_speed}/60)',
+                    "expression": f'mf"{skim_name}_WEGR"/({walk_speed}/60)',
                 },
             ]
             matrix_calc(spec_list, scenario=scenario, num_processors=num_processors)

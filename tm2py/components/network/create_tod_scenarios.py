@@ -239,6 +239,7 @@ class CreateTODScenarios(Component):
             # TODO: cntype_speed_map to config
             cntype_speed_map = {"CRAIL": 45.0, "HRAIL": 40.0, "LRAIL": 30.0, "FERRY": 15.0}
             walk_speed = 3.0
+            transit_speed = 30.0
             for link in network.links():
                 speed = cntype_speed_map.get(link["#cntype"])
                 if speed is None:
@@ -247,8 +248,11 @@ class CreateTODScenarios(Component):
                         link["@trantime"] = 60 * link.length / speed
                     elif speed > 0:
                         link["@trantime"] = 60 * link.length / speed + link.length * 5 * 0.33
+                    else:
+                        link["@trantime"] = 60 * link.length / transit_speed
                 else:
                     link["@trantime"] = 60 * link.length / speed
+                link.data1 = link["@trantime"]
 
             for line in network.transit_lines():
                 # TODO: may want to set transit line speeds (not necessarily used in the assignment though)
