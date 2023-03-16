@@ -289,11 +289,13 @@ class TransitAssignment(Component):
                 #     data_explorer.replace_primary_scenario(scenario)
                 #     self.export_segment_shapefile(emme_app, period)
                 if self.controller.config.transit.get("output_transit_segment_path"):
-                    self.export_transit_segment(scenario, period, use_fares)
+                    self.export_transit_segment(scenario, period, use_fares, use_peaking_factor)
                 if self.controller.config.transit.get("output_stop_usage_path"):
                     self.export_connector_flows(scenario, period)
                 if self.controller.config.transit.get("output_station_to_station_flow_path"):
                     self.export_boardings_by_station(network, use_fares, period, scenario)
+                if self.controller.config.transit.get("output_transfer_at_station_path"):
+                    self.export_transfer_at_stops(network, period, scenario)
 
     @_context
     def _setup(self, scenario, period):
@@ -1483,7 +1485,7 @@ class TransitAssignment(Component):
                                                 ]]))
                 f.write("\n")
 
-    def export_transit_segment(self, scenario, period, use_fares):
+    def export_transit_segment(self, scenario, period, use_fares, use_peaking_factor):
         # add total boardings by access mode
         modeller = self.controller.emme_manager.modeller()
         network_results = modeller.tool(
@@ -1543,10 +1545,14 @@ class TransitAssignment(Component):
                     if use_fares:
                         mode = segment.line['#src_mode']
                     else:
-                        mode = segment.line.mode 
+                        mode = segment.line.mode
+                    if use_peaking_factor and (period.name in ['am','pm']):
+                        orig_headway = segment.line['@orig_hdw']
+                    else:
+                        orig_headway = segment.line.headway
                     f.write(",".join([str(x) for x in [
                                                     segment.id,
-                                                    segment['#stop_name'],
+                                                    '"{0}"'.format(segment['#stop_name']),
                                                     segment.i_node, 
                                                     segment.j_node, 
                                                     segment.dwell_time, 
@@ -1559,7 +1565,7 @@ class TransitAssignment(Component):
                                                     mode,
                                                     segment.line.mode.description,
                                                     segment.line.headway,
-                                                    segment.line['@orig_hdw'],
+                                                    orig_headway,
                                                     segment.line.speed,
                                                     segment.line.vehicle.auto_equivalent,
                                                     segment.line.vehicle.seated_capacity,
@@ -1815,6 +1821,36 @@ class TransitAssignment(Component):
                             append_to_output_file=False,
                             class_name=class_name)
 
+
+    def export_transfer_at_stops(self, network, period, scenario):
+        modeller = self.controller.emme_manager.modeller()
+        transfers_at_stops = modeller.tool(
+            "inro.emme.transit_assignment.extended.apps.transfers_at_stops")
+
+        stop_location = {
+            "12th_street": 2625945, #node_id
+            '19th street': 2625944, 
+            'MacArthur': 2625943
+        }
+        stop_location_val_key = {val:key for key, val in stop_location.items()}
+        #{2625944: '19th street'}
+
+        for node in network.nodes():
+            if stop_location_val_key.get(node["#node_id"]):
+                stop_location[stop_location_val_key[node["#node_id"]]] = node.id
+
+        for access_mode in _all_access_modes:
+            for stop_name, stop_id in stop_location.items():
+                class_name = access_mode
+                demand_matrix = "mf%s_%s" % (access_mode, period.name)
+                output_file_name = self.get_abs_path(self.controller.config.transit.output_transfer_at_station_path)
+                output_path = output_file_name.format(set_name=access_mode, stop=stop_name, period=period.name)
+                
+                transfers_at_stops(selection=f"i={stop_id}",
+                                    export_path=output_path,
+                                    scenario=scenario,
+                                    class_name=class_name,
+                                    analyzed_demand=demand_matrix)
 
 def get_jl_xfer_penalty(modes, effective_headway_source, xfer_perception_factor, xfer_boarding_penalty, xfer_node_boarding_penalty):
     level_rules = [{

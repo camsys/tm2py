@@ -1228,6 +1228,7 @@ class TransitConfig(ConfigItem):
     output_shapefile_path: str = Field()
     output_transit_segment_path: str = Field()
     output_station_to_station_flow_path: str = Field()
+    output_transfer_at_station_path: str = Field()
     output_trimmed_demand: str = Field()
     classes: Tuple[TransitClassConfig, ...] = Field()
     use_ccr: bool = False
