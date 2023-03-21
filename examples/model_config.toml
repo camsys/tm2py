@@ -1526,31 +1526,31 @@
     name = "drive_acc"
     type = "DRIVE"
     assign_type = "AUX_TRANSIT"
-    speed_miles_per_hour = "ul1*1"
+    speed_or_time_factor = "ul1*1"
 [[transit.modes]]
     mode_id = "k"
     name = "knrdummy"
     type = "KNR_dummy"
     assign_type = "AUX_TRANSIT"
-    speed_miles_per_hour = 40.0
+    speed_or_time_factor = 40.0
 [[transit.modes]]
     mode_id = "w"
     name = "walk"
     type = "WALK"
     assign_type = "AUX_TRANSIT"
-    speed_miles_per_hour = "ul2*1"
+    speed_or_time_factor = "ul2*1"
 [[transit.modes]]
     mode_id = "a"
     name = "access"
     type = "ACCESS"
     assign_type = "AUX_TRANSIT"
-    speed_miles_per_hour = "ul2*1"
+    speed_or_time_factor = "ul2*1"
 [[transit.modes]]
     mode_id = "e"
     name = "egress"
     type = "EGRESS"
     assign_type = "AUX_TRANSIT"
-    speed_miles_per_hour = "ul2*1"
+    speed_or_time_factor = "ul2*1"
 [[transit.modes]]
     mode_id = "p"
     name = "pnrdummy"

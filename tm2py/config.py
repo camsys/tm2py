@@ -1121,7 +1121,7 @@ class TransitModeConfig(ConfigItem):
     mode_id: str = Field(min_length=1, max_length=1)
     name: str = Field(max_length=10)
     in_vehicle_perception_factor: Optional[float] = Field(default=None, ge=0)
-    speed_miles_per_hour: Optional[str] = Field(default="")
+    speed_or_time_factor: Optional[str] = Field(default="")
     initial_boarding_penalty: Optional[float] = Field(default=None, ge=0)
     transfer_boarding_penalty: Optional[float] = Field(default=None, ge=0)
     headway_fraction: Optional[float] = Field(default=None, ge=0)
@@ -1134,9 +1134,9 @@ class TransitModeConfig(ConfigItem):
             assert value is not None, "must be specified when assign_type==TRANSIT"
         return value
 
-    @validator("speed_miles_per_hour", always=True)
-    def speed_miles_per_hour_valid(value, values):
-        """Validate speed_miles_per_hour exists if assign_type is AUX_TRANSIT."""
+    @validator("speed_or_time_factor", always=True)
+    def speed_or_time_factor_valid(value, values):
+        """Validate speed_or_time_factor exists if assign_type is AUX_TRANSIT."""
         if "assign_type" in values and values["assign_type"] == "AUX_TRANSIT":
             assert value is not None, "must be specified when assign_type==AUX_TRANSIT"
         return value

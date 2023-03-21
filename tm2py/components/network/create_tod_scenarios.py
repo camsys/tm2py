@@ -223,7 +223,7 @@ class CreateTODScenarios(Component):
                     if mode_data['type'] == "DRIVE":
                         mode.speed = "ul1*%s" % drive_perception_factor
                     else:
-                        mode.speed = mode_data['speed_miles_per_hour']
+                        mode.speed = mode_data['speed_or_time_factor']
                 in_vehicle_factors[mode.id] = mode_data.get(
                     "in_vehicle_perception_factor", default_in_vehicle_factor)
                 initial_boarding_penalty[mode.id] = mode_data.get(
