@@ -1199,6 +1199,8 @@ class TransitConfig(ConfigItem):
 
     apply_msa_demand: bool
     value_of_time: float
+    walk_speed: float
+    transit_speed: float
     am_peaking_factor: float
     pm_peaking_factor: float
     effective_headway_source: str
@@ -1229,7 +1231,7 @@ class TransitConfig(ConfigItem):
     output_transit_segment_path: str = Field()
     output_station_to_station_flow_path: str = Field()
     output_transfer_at_station_path: str = Field()
-    output_trimmed_demand: str = Field()
+    output_trimmed_demand_report_path: str = Field()
     classes: Tuple[TransitClassConfig, ...] = Field()
     use_ccr: bool = False
     congested_transit_assignment: bool = False

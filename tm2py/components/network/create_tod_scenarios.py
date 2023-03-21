@@ -238,8 +238,8 @@ class CreateTODScenarios(Component):
             # set fixed guideway times, and initial free flow auto link times
             # TODO: cntype_speed_map to config
             cntype_speed_map = {"CRAIL": 45.0, "HRAIL": 40.0, "LRAIL": 30.0, "FERRY": 15.0}
-            walk_speed = 3.0
-            transit_speed = 30.0
+            walk_speed = self.controller.config.transit.get("walk_speed", 3.0)
+            transit_speed = self.controller.config.transit.get("transit_speed", 30.0)
             for link in network.links():
                 speed = cntype_speed_map.get(link["#cntype"])
                 if speed is None:

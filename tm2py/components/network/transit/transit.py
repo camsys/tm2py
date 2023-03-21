@@ -1114,7 +1114,7 @@ class TransitAssignment(Component):
             )
 
             drive_perception_factor = self.controller.config.transit.get("drive_perception_factor", 2)
-            walk_speed = 3.0
+            walk_speed = self.controller.config.transit.get("walk_speed")
             # divide drive time by mode specific perception factor to get the actual time
             # for walk time, use walk distance/walk speed
             # because the mode specific perception factors are hardcoded in the mode definition
@@ -1718,7 +1718,7 @@ class TransitAssignment(Component):
         iteration = self.controller.iteration
         modeller = self.controller.emme_manager.modeller()
         num_processors = self._num_processors
-        output_file_name = self.get_abs_path(self.controller.config.transit.output_trimmed_demand)
+        output_file_name = self.get_abs_path(self.controller.config.transit.output_trimmed_demand_report_path)
         matrix_calc = modeller.tool("inro.emme.matrix_calculation.matrix_calculator")
         class_name = [
             "PNR_TRN_WLK",
