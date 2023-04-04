@@ -938,6 +938,7 @@
     walk_perception_factor_cbd = 1.0
     drive_perception_factor = 6.0
     max_transfers = 3
+    # output summary paths
     output_skim_path = "skims/transit"
     output_skim_filename_tmpl = "trnskm{time_period}_{set_name}.omx"
     output_skim_matrixname_tmpl = "{property}"
@@ -947,6 +948,7 @@
     output_transit_segment_path = "output_summaries\\transit_segment_{period}.csv"
     output_station_to_station_flow_path = "output_summaries\\{operator}_station_to_station_{set_name}_{period}.txt"
     output_transfer_at_station_path = "output_summaries\\{set_name}_transfer_at_{stop}_{period}"
+    # fare inputs
     fares_path = "inputs\\trn\\fares.far"
     fare_matrix_path = "inputs\\trn\\fareMatrix.txt"
     # max expected transfer distance for mode-to-mode transfer fare table generation
@@ -969,6 +971,13 @@
     use_peaking_factor = true
     am_peaking_factor = 1.219
     pm_peaking_factor = 1.262
+    # timed tranfer nodes
+    timed_transfer_nodes = [2625944, 2625943] # standard network #node_id of Bart stations: 19th street, MacArthur
+    [transit.output_transfer_at_station_node_ids]
+        "12th_street"=2625945 # standard network #node_id
+        "19th street"=2625944 
+        "MacArthur"=2625943
+
 
     [[transit.classes]]
         name = "wlk_trn_wlk"

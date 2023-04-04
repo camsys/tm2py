@@ -51,6 +51,7 @@ _skim_names = [
     "IVTCOM",
     "IVTFRY",
     "CROWD",
+    "XBOATIME"
 ]
 
 _segment_cost_function = """
@@ -61,23 +62,31 @@ min_stand_weight = 1.4
 max_stand_weight = 1.6
 power_stand_weight = 3.4
 
+values = scenario.get_attribute_values("TRANSIT_LINE", {0})
+network.set_attribute_values("TRANSIT_LINE", {0}, values)
+
 def calc_segment_cost(transit_volume, capacity, segment):
     if transit_volume <= 0:
         return 0.0
     line = segment.line
-    # need assignment period in seated_capacity calc?
-    seated_capacity = line.vehicle.seated_capacity * {0} * 60 / line.headway
-    num_seated = min(transit_volume, seated_capacity)
-    num_standing = max(transit_volume - seated_capacity, 0)
+    mode_char = line{0}
+    if mode_char in ["p"]:
+        congestion = 0.25 * ((transit_volume / capacity) ** 8)
+    else:
+        # need assignment period in seated_capacity calc?
+        seated_capacity = line.vehicle.seated_capacity * {1} * 60 / line.headway
+        num_seated = min(transit_volume, seated_capacity)
+        num_standing = max(transit_volume - seated_capacity, 0)
 
-    vcr = transit_volume / capacity
-    crowded_factor = (((
-           (min_seat_weight+(max_seat_weight-min_seat_weight)*(vcr)**power_seat_weight)*num_seated
-           +(min_stand_weight+(max_stand_weight-min_stand_weight)*(vcr)**power_stand_weight)*num_standing
-           )/(transit_volume)))
+        vcr = transit_volume / capacity
+        crowded_factor = (((
+            (min_seat_weight+(max_seat_weight-min_seat_weight)*(vcr)**power_seat_weight)*num_seated
+            +(min_stand_weight+(max_stand_weight-min_stand_weight)*(vcr)**power_stand_weight)*num_standing
+            )/(transit_volume)))
 
-    # Toronto implementation limited factor between 1.0 and 10.0
-    return max(crowded_factor, 1.0) - 1.0
+        # Toronto implementation limited factor between 1.0 and 10.0
+        congestion = max(crowded_factor, 1.0) - 1.0
+    return congestion
 """
 
 _headway_cost_function = """
@@ -285,9 +294,6 @@ class TransitAssignment(Component):
                 
                 if self.controller.config.transit.get("output_transit_boardings_path"):
                     self.export_boardings_by_line(scenario, period, use_fares)
-                # if self.controller.config.transit.get("output_shapefile_path"): need further test
-                #     data_explorer.replace_primary_scenario(scenario)
-                #     self.export_segment_shapefile(emme_app, period)
                 if self.controller.config.transit.get("output_transit_segment_path"):
                     self.export_transit_segment(scenario, period, use_fares, use_peaking_factor)
                 if self.controller.config.transit.get("output_stop_usage_path"):
@@ -363,15 +369,7 @@ class TransitAssignment(Component):
         for segment in network.transit_segments():
             if "BART_acc" in segment.id:
                 if "West Oakland" in segment.id:
-                    segment["@board_cost"] = 12.4*deflator
-                elif "Glen Park" in segment.id:
-                    segment["@board_cost"] = 13.0*deflator
-                elif "Lake Merritt" in segment.id:
-                    segment["@board_cost"] = 11.0*deflator
-                elif "San Bruno" in segment.id:
-                    segment["@board_cost"] = 4.5*deflator
-                elif "Fruitvale" in segment.id:
-                    segment["@board_cost"] = 4.5*deflator             
+                    segment["@board_cost"] = 12.4*deflator        
                 else:
                     segment["@board_cost"] = 3.0*deflator
             elif "Caltrain_acc" in segment.id:
@@ -494,6 +492,7 @@ class TransitAssignment(Component):
                 ("IN_VEHICLE_COST", "In vehicle cost"),  
                 ("CROWD", "Crowding penalty"),
                 ("TRIM", "used to trim demands"),
+                ("XBOATIME", "transfer boarding time penalty")
             ]
             skim_sets = [
                 ("PNR_TRN_WLK", "PNR access"),
@@ -955,25 +954,17 @@ class TransitAssignment(Component):
                 spec["aux_transit_cost"] = parameters.get("aux_transit_cost")
                 specs.append(spec)
                 names.append(mode_name)
-            # func = {
-            #     "type": "BPR",
-            #     "weight": 0.15,
-            #     "exponent": 4,
-            #     "assignment_period": period.length_hours,
-            #     "orig_func": False,
-            #     "congestion_attribute": "us3"
-            # }
             func = {
                 "type": "CUSTOM",
-                "python_function": _segment_cost_function.format(period.length_hours),
+                "python_function": _segment_cost_function.format(mode_attr, period.length_hours),
                 "congestion_attribute": "us3",
                 "orig_func": False,
                 "assignment_period": period.length_hours,
             }
             stop = {
                 "max_iterations": max_iteration,
-                "normalized_gap": 0.01,
-                "relative_gap": 0.001
+                "normalized_gap": 0.25,
+                "relative_gap": 0.005
             }
             assign_transit(
                 specs,
@@ -1377,7 +1368,7 @@ class TransitAssignment(Component):
                 )
 
         if congested_transit_assignment:
-            with self.controller.emme_manager.logbook_trace("Calculate crowding"):
+            with self.controller.emme_manager.logbook_trace("Calculate crowding, transfer boarding time penalty"):
                 spec = get_strat_spec({"in_vehicle": "@ccost"}, f'mf"{skim_name}_CROWD"')
                 strategy_analysis(
                     spec,
@@ -1385,6 +1376,32 @@ class TransitAssignment(Component):
                     scenario=scenario,
                     num_processors=num_processors,
                 )
+                spec = get_strat_spec({"boarding": "@xboard_nodepen"}, f'mf"{skim_name}_XBOATIME"')
+                strategy_analysis(
+                    spec,
+                    class_name=class_name,
+                    scenario=scenario,
+                    num_processors=num_processors,
+                )
+
+                if ("PNR_TRN_WLK" in skim_name) or ("WLK_TRN_PNR"in skim_name):
+                    spec_list = [
+                        {  # subtract PNR boarding from total boardings
+                            "type": "MATRIX_CALCULATION",
+                            "constraint": {
+                                "by_value": {
+                                    "od_values": f'mf"{skim_name}_XBOATIME"',
+                                    "interval_min": 0,
+                                    "interval_max": 9999999,
+                                    "condition": "INCLUDE",
+                                }
+                            },
+                            "result": f'mf"{skim_name}_XBOATIME"',
+                            "expression": f'(mf"{skim_name}_XBOATIME" - 1).max.0',
+                        }
+                    ]       
+                    matrix_calc(spec_list, scenario=scenario, num_processors=num_processors)
+
 
     def mask_allpen(self, period):
         # Reset skims to 0 if not both local and premium
@@ -1431,7 +1448,7 @@ class TransitAssignment(Component):
             os.makedirs(os.path.dirname(omx_file_path), exist_ok=True)
 
             for skim in _skim_names:
-                if "BOARDS" in skim:
+                if ("BOARDS" in skim) or ("XBOATIME" in skim):
                     matrices[skim] = (f'mf"{period}_{set_name}_{skim}"')
                 else:
                     matrices_growth[skim] = (f'mf"{period}_{set_name}_{skim}"')
@@ -1827,13 +1844,8 @@ class TransitAssignment(Component):
         transfers_at_stops = modeller.tool(
             "inro.emme.transit_assignment.extended.apps.transfers_at_stops")
 
-        stop_location = {
-            "12th_street": 2625945, #node_id
-            '19th street': 2625944, 
-            'MacArthur': 2625943
-        }
+        stop_location = self.controller.config.transit.output_transfer_at_station_node_ids
         stop_location_val_key = {val:key for key, val in stop_location.items()}
-        #{2625944: '19th street'}
 
         for node in network.nodes():
             if stop_location_val_key.get(node["#node_id"]):
@@ -1851,6 +1863,7 @@ class TransitAssignment(Component):
                                     scenario=scenario,
                                     class_name=class_name,
                                     analyzed_demand=demand_matrix)
+
 
 def get_jl_xfer_penalty(modes, effective_headway_source, xfer_perception_factor, xfer_boarding_penalty, xfer_node_boarding_penalty):
     level_rules = [{

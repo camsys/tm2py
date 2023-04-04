@@ -1232,6 +1232,8 @@ class TransitConfig(ConfigItem):
     output_station_to_station_flow_path: str = Field()
     output_transfer_at_station_path: str = Field()
     output_trimmed_demand_report_path: str = Field()
+    timed_transfer_nodes: Tuple[int, ...] = Field()
+    output_transfer_at_station_node_ids: Dict[str, int] = Field()
     classes: Tuple[TransitClassConfig, ...] = Field()
     use_ccr: bool = False
     congested_transit_assignment: bool = False
