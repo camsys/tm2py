@@ -1122,7 +1122,7 @@ class TransitModeConfig(ConfigItem):
     mode_id: str = Field(min_length=1, max_length=1)
     name: str = Field(max_length=10)
     in_vehicle_perception_factor: Optional[float] = Field(default=None, ge=0)
-    speed_miles_per_hour: Optional[str] = Field(default="")
+    speed_or_time_factor: Optional[str] = Field(default="")
     initial_boarding_penalty: Optional[float] = Field(default=None, ge=0)
     transfer_boarding_penalty: Optional[float] = Field(default=None, ge=0)
     headway_fraction: Optional[float] = Field(default=None, ge=0)
@@ -1135,9 +1135,9 @@ class TransitModeConfig(ConfigItem):
             assert value is not None, "must be specified when assign_type==TRANSIT"
         return value
 
-    @validator("speed_miles_per_hour", always=True)
-    def speed_miles_per_hour_valid(value, values):
-        """Validate speed_miles_per_hour exists if assign_type is AUX_TRANSIT."""
+    @validator("speed_or_time_factor", always=True)
+    def speed_or_time_factor_valid(value, values):
+        """Validate speed_or_time_factor exists if assign_type is AUX_TRANSIT."""
         if "assign_type" in values and values["assign_type"] == "AUX_TRANSIT":
             assert value is not None, "must be specified when assign_type==AUX_TRANSIT"
         return value
@@ -1200,12 +1200,15 @@ class TransitConfig(ConfigItem):
 
     apply_msa_demand: bool
     value_of_time: float
+    walk_speed: float
+    transit_speed: float
     am_peaking_factor: float
     pm_peaking_factor: float
     effective_headway_source: str
     initial_wait_perception_factor: float
     transfer_wait_perception_factor: float
     walk_perception_factor: float
+    walk_perception_factor_cbd: float
     drive_perception_factor: float
     
     max_transfers: int
@@ -1226,7 +1229,12 @@ class TransitConfig(ConfigItem):
     output_skim_matrixname_tmpl: str = Field()
     output_transit_boardings_path: str = Field()
     output_shapefile_path: str = Field()
+    output_transit_segment_path: str = Field()
     output_station_to_station_flow_path: str = Field()
+    output_transfer_at_station_path: str = Field()
+    output_trimmed_demand_report_path: str = Field()
+    timed_transfer_nodes: Tuple[int, ...] = Field()
+    output_transfer_at_station_node_ids: Dict[str, int] = Field()
     classes: Tuple[TransitClassConfig, ...] = Field()
     use_ccr: bool = False
     congested_transit_assignment: bool = False

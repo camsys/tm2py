@@ -609,12 +609,12 @@ class ApplyFares(Component):
             self.zone_boundary_crossing_approx(lines, valid_farezones, fare_matrix, fs_data)
         else:
             self.station_to_station_approx(valid_farezones, fare_matrix, zone_nodes, valid_links, network)
-
-        # copy costs from links to segments
-        for line in lines:
-            for segment in line.segments():
-                segment["@invehicle_cost"] = max(segment.link.invehicle_cost, 0)
-                segment["@board_cost"] = max(segment.link.board_cost, 0)
+            # copy costs from links to segments
+            for line in lines:
+                for segment in line.segments():
+                    segment["@invehicle_cost"] = max(segment.link.invehicle_cost, 0)
+                    segment["@board_cost"] = max(segment.link.board_cost, 0)
+        
         network.delete_attribute("LINK", "invehicle_cost")
         network.delete_attribute("LINK", "board_cost")
 
@@ -688,16 +688,15 @@ class ApplyFares(Component):
                         if same_farezone_missing_cost == farezone:
                             self._log.append({"type": "text3", "content": farezone_warning4})
                         same_farezone_missing_cost = farezone
-                    if seg.link:
-                        seg.link.board_cost = max(board_cost, seg.link.board_cost)
+                    seg["@board_cost"] = max(board_cost, seg["@board_cost"])
 
 
                 farezone = int(seg.i_node["@farezone"])
                 # Set the zone-to-zone fare increment from the previous stop
                 if prev_farezone != 0 and farezone != prev_farezone:
                     try:
-                        invehicle_cost = fare_matrix[prev_farezone][farezone] - prev_seg.link.board_cost
-                        prev_seg.link.invehicle_cost = max(invehicle_cost, prev_seg.link.invehicle_cost)
+                        invehicle_cost = fare_matrix[prev_farezone][farezone] - prev_seg["@board_cost"]
+                        prev_seg["@invehicle_cost"] = max(invehicle_cost, prev_seg["@invehicle_cost"])
                     except KeyError:
                         self._log.append({
                             "type": "text3", 
