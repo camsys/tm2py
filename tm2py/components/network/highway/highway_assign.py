@@ -131,6 +131,7 @@ class HighwayAssignment(Component):
         iteration = self.controller.iteration
         dst_veh_groups = self.config.tolls.dst_vehicle_group_names
         run_dynamic_toll = self.config.tolls.run_dynamic_toll
+        max_dynamic_toll_iter = self.config.tolls.max_dynamic_toll_iter
         valuetoll_start_tollbooth_code = self.config.tolls.valuetoll_start_tollbooth_code
         max_dynamic_valuetoll = self.config.tolls.max_dynamic_valuetoll
         warmstart = self.controller.config.run.warmstart.warmstart
@@ -152,7 +153,16 @@ class HighwayAssignment(Component):
                     None
                 self._create_skim_matrices(scenario, assign_classes)
 
-                if not run_dynamic_toll:
+                # pre-check if there are any valuetoll links
+                valuetoll_start_tollbooth_code = self.config.tolls.valuetoll_start_tollbooth_code
+                valuetoll_links_exist = False
+                network = scenario.get_network()
+                for link in network.links():
+                    if link["@tollbooth"] >= valuetoll_start_tollbooth_code and link["@lanes"] > 0:
+                        valuetoll_links_exist = True
+                        break
+
+                if (not run_dynamic_toll) or (not valuetoll_links_exist):
                     assign_spec = self._get_assignment_spec(assign_classes)
                     self._run_sola_traffic_assignment(scenario, assign_spec, chart_log_interval=1)
                 elif iteration == 0 and (not warmstart):
@@ -160,13 +170,15 @@ class HighwayAssignment(Component):
                     assign_spec = self._get_assignment_spec(assign_classes)
                     self._run_sola_traffic_assignment(scenario, assign_spec, chart_log_interval=1)
                 else: 
-                    # (1) run_dynamic_toll = True, warmstart = False, iteration >= 1, or
-                    # (2) run_dynamic_toll = True, warmstart = True
-                    # run maximum 5 times of dynamic tolling
+                    # (1) valuetoll_links_exist, run_dynamic_toll = True, warmstart = False, iteration >= 1, or
+                    # (2) valuetoll_links_exist, run_dynamic_toll = True, warmstart = True
+                    # run maximum "max_dynamic_toll_iter" times of dynamic tolling
                     # break out the loop if no valuetoll need to be updated
-                    for dynamic_toll_iteration in range(1, 6):
+
+                    for dynamic_toll_iteration in range(1, max_dynamic_toll_iter+1):
                         assign_spec = self._get_assignment_spec(assign_classes)
-                        if dynamic_toll_iteration < 5:
+                        # reduce inner iter if it's not the last dynamic toll iteration
+                        if dynamic_toll_iteration < max_dynamic_toll_iter:
                             assign_spec["stopping_criteria"]["max_iterations"] = self.config.tolls.dynamic_toll_inner_iter
                         self._run_sola_traffic_assignment(scenario, assign_spec, chart_log_interval=1)
                         self._calc_total_flow(scenario)
@@ -188,18 +200,17 @@ class HighwayAssignment(Component):
                                         link["@update_dynamic_toll"] = 1
                                         break 
 
-                        # if need to update valuetoll, call set_tolls function
-                        if update_toll_required:
-                            PrepareNetwork(controller=self._controller)._set_tolls(network=network, time_period=time)
-                            scenario.publish_network(network)
-                        else:
-                            if dynamic_toll_iteration < 5:
-                                # if there is no valuetoll updated needed before 5th dynamic toll iteration
+                        if dynamic_toll_iteration < max_dynamic_toll_iter:
+                            if update_toll_required: # update value tolls
+                                PrepareNetwork(controller=self._controller)._set_dynamic_tolls(network=network)
+                                PrepareNetwork(controller=self._controller)._calc_link_class_costs(network=network)
+                                scenario.publish_network(network)
+                            else:
+                                # if there is no valuetoll updated needed before max_dynamic_toll_iter,
+                                # run a full assignment without reducing inner iter
                                 assign_spec = self._get_assignment_spec(assign_classes)
                                 self._run_sola_traffic_assignment(scenario, assign_spec, chart_log_interval=1)
-                            break # stop running another dynamic toll assignment iteration
-                    if iteration == self.controller.config.run.end_iteration:
-                        self._write_dynamic_valuetoll() # write out result valuetolls into csv file
+                                break # stop running another dynamic toll assignment iteration
 
                 # after assignment (potentially with multiple iteration due to dynamic tolling) finished
                 # Subtract non-time costs from gen cost to get the raw travel time
@@ -216,6 +227,10 @@ class HighwayAssignment(Component):
 
                 if self.logger.debug_enabled:
                     self._log_debug_report(scenario, time)
+
+        # write result dynamic valuetoll to csv for reference
+        if iteration == self.controller.config.run.end_iteration:
+            self._write_dynamic_valuetoll()
 
 
     def _run_sola_traffic_assignment(self, scenario, assign_spec, chart_log_interval=1):

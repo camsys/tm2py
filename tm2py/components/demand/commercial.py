@@ -509,7 +509,10 @@ class CommercialVehicleTripDistribution(Subcomponent):
             data = omx.read(mats[0]) 
             omx.close()
             num_data_zones = self.num_total_zones
-            
+
+        else:
+            raise ValueError(f"unknown file extension for k_factors_file: {k_factors_file}")
+
         padding = ((0, num_data_zones - self.num_internal_zones), (0, num_data_zones - self.num_internal_zones))
         k_factors = np.pad(data, padding)
             

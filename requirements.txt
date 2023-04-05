@@ -32,6 +32,7 @@ rtree
 shapely
 scipy
 tables
+tabulate
 toml
 typing_extensions
 pyarrow

@@ -189,56 +189,61 @@ class PrepareNetwork(Component):
         else:
             toll_file_path = self.config.tolls.file_path
 
-        if self.controller.iteration == 0:
-            toll_index = self._get_toll_indices(toll_file_path = self.get_abs_path(toll_file_path))
-            for link in network.links():
-                # set bridgetoll
-                if link["@tollbooth"] > 0 and link["@tollbooth"] < valuetoll_start_tollbooth_code:
-                    index = int(
-                        link["@tollbooth"] * 1000
-                        + link["@tollseg"] * 10
-                        + link["@useclass"]
+        assert self.controller.iteration == 0
+        toll_index = self._get_toll_indices(toll_file_path = self.get_abs_path(toll_file_path))
+        for link in network.links():
+            # set bridgetoll
+            if link["@tollbooth"] > 0 and link["@tollbooth"] < valuetoll_start_tollbooth_code:
+                index = int(
+                    link["@tollbooth"] * 1000
+                    + link["@tollseg"] * 10
+                    + link["@useclass"]
+                )
+                data_row = toll_index.get(index)
+                if data_row is None:
+                    self.logger.warn(
+                        f"set tolls failed index lookup {index}, link {link.id}",
+                        indent=True,
                     )
-                    data_row = toll_index.get(index)
-                    if data_row is None:
-                        self.logger.warn(
-                            f"set tolls failed index lookup {index}, link {link.id}",
-                            indent=True,
-                        )
-                        continue  # tolls will remain at zero
+                    continue  # tolls will remain at zero
+                for src_veh, dst_veh in zip(src_veh_groups, dst_veh_groups):
+                    link[f"@bridgetoll_{dst_veh}"] = (
+                        float(data_row[f"toll{time_period.lower()}_{src_veh}"]) * 100
+                    )
+            # set valuetoll
+            elif link["@tollbooth"] >= valuetoll_start_tollbooth_code:
+                if run_dynamic_toll: # initialize valuetoll to 0
                     for src_veh, dst_veh in zip(src_veh_groups, dst_veh_groups):
-                        link[f"@bridgetoll_{dst_veh}"] = (
-                            float(data_row[f"toll{time_period.lower()}_{src_veh}"]) * 100
+                        link[f"@valuetoll_{dst_veh}"] = 0
+                else: # if not running dynamic toll, set per-mile valuetoll based on lookup
+                    for src_veh, dst_veh in zip(src_veh_groups, dst_veh_groups):
+                        link[f"@valuetoll_{dst_veh}"] = (
+                            float(data_row[f"toll{time_period.lower()}_{src_veh}"])
+                            * link.length
+                            * 100
                         )
-                # set valuetoll
-                elif link["@tollbooth"] >= valuetoll_start_tollbooth_code:
-                    if run_dynamic_toll: # initialize valuetoll to 0
-                        for src_veh, dst_veh in zip(src_veh_groups, dst_veh_groups):
-                            link[f"@valuetoll_{dst_veh}"] = 0
-                    else: # if not running dynamic toll, set per-mile valuetoll based on lookup
-                        for src_veh, dst_veh in zip(src_veh_groups, dst_veh_groups):
-                            link[f"@valuetoll_{dst_veh}"] = (
-                                float(data_row[f"toll{time_period.lower()}_{src_veh}"])
-                                * link.length
-                                * 100
-                            )
-        else: # note: for global iteration >= 1, `set_toll` will only be called when valuetoll for some links need to be updated
-            assert run_dynamic_toll == True, "in global iteration>=1, `set_toll` should only be called when run_dynamic_toll is True"
-            # update valuetoll for links flagged by @update_dynamic_toll==1
-            valuetoll_increment = self.config.tolls.valuetoll_increment
-            max_dynamic_valuetoll = self.config.tolls.max_dynamic_valuetoll
-            for link in network.links():
-                if link["@tollbooth"] >= valuetoll_start_tollbooth_code and link["@update_dynamic_toll"] == 1:
-                    assert link["@vc"] > 1, "update_dynamic_toll should be 0 if vc <= 1"
-                    increment_steps = round(link["@vc"])
-                    for dst_veh in dst_veh_groups:
-                        valuetoll_per_mile = (link[f"@valuetoll_{dst_veh}"] / link.length) / 100  # calculate per-mile charge
-                        # updated valuetoll (capped by max_dynamic_valuetoll)
-                        increased_valuetoll = valuetoll_per_mile + valuetoll_increment * increment_steps
-                        if increased_valuetoll > max_dynamic_valuetoll:
-                            link[f"@valuetoll_{dst_veh}"] = (max_dynamic_valuetoll * link.length * 100)
-                        else:
-                            link[f"@valuetoll_{dst_veh}"] = (increased_valuetoll * link.length * 100)
+
+    def _set_dynamic_tolls(self, network: EmmeNetwork):
+        dst_veh_groups = self.config.tolls.dst_vehicle_group_names
+        valuetoll_start_tollbooth_code = self.config.tolls.valuetoll_start_tollbooth_code
+        run_dynamic_toll = self.config.tolls.run_dynamic_toll
+
+        assert run_dynamic_toll == True, "`set_dynamic_tolls` should only be called when run_dynamic_toll is True"
+        # update valuetoll for links flagged by @update_dynamic_toll==1
+        valuetoll_increment = self.config.tolls.valuetoll_increment
+        max_dynamic_valuetoll = self.config.tolls.max_dynamic_valuetoll
+        for link in network.links():
+            if link["@tollbooth"] >= valuetoll_start_tollbooth_code and link["@update_dynamic_toll"] == 1:
+                assert link["@vc"] > 1, "update_dynamic_toll should be 0 if vc <= 1"
+                increment_steps = round(link["@vc"])
+                for dst_veh in dst_veh_groups:
+                    valuetoll_per_mile = (link[f"@valuetoll_{dst_veh}"] / link.length) / 100  # calculate per-mile charge
+                    # updated valuetoll (capped by max_dynamic_valuetoll)
+                    increased_valuetoll = valuetoll_per_mile + valuetoll_increment * increment_steps
+                    if increased_valuetoll > max_dynamic_valuetoll:
+                        link[f"@valuetoll_{dst_veh}"] = (max_dynamic_valuetoll * link.length * 100)
+                    else:
+                        link[f"@valuetoll_{dst_veh}"] = (increased_valuetoll * link.length * 100)
 
 
     def _get_toll_indices(self, toll_file_path: str) -> Dict[int, Dict[str, str]]:

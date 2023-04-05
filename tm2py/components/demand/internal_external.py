@@ -5,7 +5,7 @@ from __future__ import annotations
 import itertools
 import os
 from collections import defaultdict
-from typing import Dict
+from typing import Dict, TYPE_CHECKING
 
 import numpy as np
 import openmatrix as _omx
@@ -17,6 +17,9 @@ from tm2py.emme.matrix import OMXManager
 from tm2py.logger import LogStartEnd
 from tm2py.matrix import create_matrix_factors
 from tm2py.omx import omx_to_dict
+
+if TYPE_CHECKING:
+    from tm2py.controller import RunController
 
 NumpyArray = np.array
 
@@ -154,7 +157,7 @@ class ExternalDemand(Subcomponent):
         _mx_name_tmpl = self.config.input_demand_matrixname_tmpl
         _matrices = {m: _mx_name_tmpl.format(mode=m.upper()) for m in self.modes}
 
-        self.base_demand = omx_to_dict(self.input_demand_file, matrices=_matrices)
+        self._base_demand = omx_to_dict(self.input_demand_file, matrices=_matrices)
 
     def run(self, base_demand: Dict[str, NumpyArray] = None) -> Dict[str, NumpyArray]:
         """Calculate adjusted demand based on scenario year and growth rates.

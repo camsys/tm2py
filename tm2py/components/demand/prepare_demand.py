@@ -331,7 +331,12 @@ class PrepareHighwayDemand(PrepareDemand):
                     jt = pd.DataFrame(None, columns = jt_full.columns)
 
                
-                for trip_mode in mode_name_dict:
+                for trip_mode in sorted(mode_name_dict):
+                    # Python preserves keys in the order they are inserted but
+                    # mode_name_dict originates from TOML, which does not guarantee
+                    # that the ordering of keys is preserved.  See
+                    # https://github.com/toml-lang/toml/issues/162
+
                     if trip_mode in [1,2,3]: # currently hard-coded based on Travel Mode trip mode codes
                         highway_cache[mode_name_dict[trip_mode]] = combine_trip_lists(it,jt, trip_mode)
 
@@ -350,7 +355,6 @@ class PrepareHighwayDemand(PrepareDemand):
                             matrix_name =f'{out_mode}_{suffix}'  if suffix else out_mode
                             self.logger.debug(f"Writing out mode {out_mode}")
                             highway_cache[out_mode] += (ridehail_trips * ridehail_split_factors[out_mode]).astype(float).round(2)
-                            highway_cache[out_mode] = highway_cache[out_mode]
                             highway_out_file.write_array(numpy_array = highway_cache[out_mode], name = matrix_name)
        
             highway_out_file.close()

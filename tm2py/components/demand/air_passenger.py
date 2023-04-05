@@ -6,6 +6,7 @@ from __future__ import annotations
 import itertools
 import os
 from typing import TYPE_CHECKING
+from pathlib import Path
 
 import numpy as np
 import openmatrix as _omx
@@ -269,7 +270,7 @@ class AirPassenger(Component):
         os.makedirs(os.path.dirname(path_tmplt), exist_ok=True)
 
         for _period in self.time_period_names:
-            _file_path = path_tmplt / self.config.outfile_trip_table_tmp.format(
+            _file_path = Path(path_tmplt) / self.config.outfile_trip_table_tmp.format(
                 period=_period
             )
             df_to_omx(

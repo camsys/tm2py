@@ -26,8 +26,8 @@ class ConvergenceReport(Component):
         self.config =  self.controller.config
 
     def run(self):
-        #self.save_results()
-        if self.controller.iteration > self.controller.config.run.start_iteration:
+        self.save_results()
+        if self.controller.iteration > 1:
             self.export_summaries()
         
         
@@ -67,8 +67,10 @@ class ConvergenceReport(Component):
             
             hwy_skm_fn = self.get_abs_path(self.controller.config.highway.output_skim_path / 
                 self.controller.config.highway.output_skim_filename_tmpl.format(time_period = time_period))
+            # get the first highway DA class 
+            hwy_DA_class_names = [c.name for c in self.config.highway.classes if 'da' in c.name.lower()]
             with omx.open_file(hwy_skm_fn) as hwy_skm:
-                timeda = np.array(hwy_skm['TIMEDA'])[:num_internal_zones, :num_internal_zones]
+                timeda = np.array(hwy_skm[f'TIME{hwy_DA_class_names[0].upper()}'])[:num_internal_zones, :num_internal_zones]
             skims[f'HWY_DA_TIME_{time_period}'] = timeda
         
         skims.close()
@@ -165,7 +167,7 @@ class ConvergenceReport(Component):
         trip_totals = pd.DataFrame(trip_totals, columns = ['Mode Group', 'Trips', 'PrevIter'])
         trip_totals['Diff'] = trip_totals['Trips'] - trip_totals['PrevIter']
         
-        lines_out.append(trip_totals.round(2).to_csv(index = False, sep = '\t'))
+        lines_out.append(trip_totals.round(2).to_markdown())
         
         lines_out.append(f'Difference in total daily trips = \t{trip_totals["Diff"].sum()}')
         lines_out.append(f'Percent RMSE in total daily trips = \t{daily_MSE / num_internal_zones ** 2}')
@@ -217,7 +219,7 @@ class ConvergenceReport(Component):
         # limited to FT = 1, 2, 4, 5, 6 (Freeways, Highways, Major and Minor Arterials)
         # time period: AM, MD, PM
         ft_types = self.config.highway.convergence.ft_types
-        selected_links= self.config.highway.convergence.selected_links # Bay Bridge in both directions
+        selected_links= self.config.highway.convergence.selected_links
         for time_period in ['AM','MD','PM']:
         
             link_vols = pd.concat([network_attr_prev_iter[network_attr_prev_iter.time_period == time_period].sort_values('#link_id')[['#link_id', '@ft', 'auto_volume']], 
@@ -232,20 +234,21 @@ class ConvergenceReport(Component):
             lines_out.append(f'Number of FT={"/".join([str(e) for e in ft_types])} links with {time_period} volume change greater than 10% or 500 vehicles: \t {((link_df.pct_diff > 0.1) | (link_df["diff"] > 500)).sum()}, ({100*((link_df.pct_diff > 0.1) | (link_df["diff"] > 500)).mean()}%)')
         
             # Total, Change in Volumes/speed on the Bay Bridge between iterations by time periods (AM, MD, PM)
-            bb_prev = network_attr_prev_iter[(network_attr_prev_iter.time_period == time_period) & (network_attr_prev_iter['#link_id'].isin(selected_links))]
-            bb_curr = network_attr_curr_iter[(network_attr_curr_iter.time_period == time_period) & (network_attr_curr_iter['#link_id'].isin(selected_links))]
-            bb_prev['speed'] = bb_prev['length'] / bb_prev['auto_time'] * 60 # MPH
-            bb_curr['speed'] = bb_curr['length'] / bb_curr['auto_time'] * 60 # MPH
-            bay_bridge = bb_prev.merge(bb_curr, on = '#link_id', suffixes = ['_prev','_curr'])
-            bay_bridge['Change in Volume'] = bay_bridge['auto_volume_curr'] - bay_bridge['auto_volume_prev']
-            bay_bridge['Change in Speed'] = bay_bridge['speed_curr'] - bay_bridge['speed_prev']
-            lines_out.append('Bay Bridge links:')
-            lines_out.append(bay_bridge.set_index('#link_id')[['auto_volume_curr', 'auto_volume_prev', 'Change in Volume', 'speed_curr', 'speed_prev', 'Change in Speed']].round(2).to_csv(index = False, sep = '\t'))
+            key_links_prev = network_attr_prev_iter[(network_attr_prev_iter.time_period == time_period) & (network_attr_prev_iter['#link_id'].isin(selected_links))]
+            key_links_curr = network_attr_curr_iter[(network_attr_curr_iter.time_period == time_period) & (network_attr_curr_iter['#link_id'].isin(selected_links))]
+            key_links_prev['speed'] = key_links_prev['length'] / key_links_prev['auto_time'] * 60 # MPH
+            key_links_curr['speed'] = key_links_curr['length'] / key_links_curr['auto_time'] * 60 # MPH
+            key_links = key_links_prev.merge(key_links_curr, on = '#link_id', suffixes = ['_prev','_curr'])
+            key_links['Change in Volume'] = key_links['auto_volume_curr'] - key_links['auto_volume_prev']
+            key_links['Change in Speed'] = key_links['speed_curr'] - key_links['speed_prev']
+            key_links['Link Name'] = key_links['#link_id'].map(selected_links)
+            lines_out.append('Selected Key Links:')
+            lines_out.append(key_links.set_index('#link_id')[['Link Name','auto_volume_curr', 'auto_volume_prev', 'Change in Volume', 'speed_curr', 'speed_prev', 'Change in Speed']].round(2).to_markdown())
             
         
         
         # Network VMT, AM and daily
-        AM_VMT_prev, AM_VMT_curr = network_summary_prev_iter[network_summary_prev_iter['time_period'] == "am"]['vmt'].sum(), network_summary_curr_iter[network_summary_curr_iter['time_period'] == "am"]['vmt'].sum()
+        AM_VMT_prev, AM_VMT_curr = network_summary_prev_iter[network_summary_prev_iter['time_period'] == "AM"]['vmt'].sum(), network_summary_curr_iter[network_summary_curr_iter['time_period'] == "AM"]['vmt'].sum()
         daily_VMT_prev, daily_VMT_curr = network_summary_prev_iter['vmt'].sum(), network_summary_curr_iter['vmt'].sum()
         lines_out.append(f'AM highway network VMT:\t {AM_VMT_curr}')
         lines_out.append(f'Change in AM highway network VMT: \t {(AM_VMT_curr - AM_VMT_prev) / AM_VMT_prev}')
@@ -253,7 +256,7 @@ class ConvergenceReport(Component):
         lines_out.append(f'Change in daily highway network VMT: \t {(daily_VMT_curr - daily_VMT_prev) / daily_VMT_prev}')
         
         # Network travel time, AM and daily
-        AM_TT_prev, AM_TT_curr = network_summary_prev_iter[network_summary_prev_iter['time_period'] == "am"]['tt'].sum(), network_summary_curr_iter[network_summary_curr_iter['time_period'] == "am"]['tt'].sum()
+        AM_TT_prev, AM_TT_curr = network_summary_prev_iter[network_summary_prev_iter['time_period'] == "AM"]['tt'].sum(), network_summary_curr_iter[network_summary_curr_iter['time_period'] == "AM"]['tt'].sum()
         daily_TT_prev, daily_TT_curr = network_summary_prev_iter['tt'].sum(), network_summary_curr_iter['tt'].sum()
         lines_out.append(f'AM highway network travel time:\t {AM_TT_curr}')
         lines_out.append(f'Change in AM highway network travel time: \t {(AM_TT_curr - AM_TT_prev) / AM_TT_prev}')

@@ -1,0 +1,111 @@
+
+========== Iter 3 ==========
+
+
+------Trip Table Convergence Statistics------
+|    | Mode Group          |            Trips |         PrevIter |   Diff |
+|---:|:--------------------|-----------------:|-----------------:|-------:|
+|  0 | KNR Transit         | 162090           | 162090           |      0 |
+|  1 | PNR Transit         | 128165           | 128165           |      0 |
+|  2 | Walk access transit |      1.15341e+06 |      1.15341e+06 |      0 |
+|  3 | Truck               |      3.34843e+06 |      3.34843e+06 |      0 |
+|  4 | HOV                 |      1.22778e+06 |      1.22778e+06 |      0 |
+|  5 | Drive alone         |      2.69518e+06 |      2.69518e+06 |      0 |
+Difference in total daily trips = 	0.0
+Percent RMSE in total daily trips = 	0.0
+Percent of OD pairs changing more than 10% in AM KNR Transit trip table (>=50 trips in previous iter.): 0.0%
+Percent of OD pairs changing more than 10% in MD KNR Transit trip table (>=50 trips in previous iter.): 0.0%
+Percent of OD pairs changing more than 10% in PM KNR Transit trip table (>=50 trips in previous iter.): 0.0%
+Percent of OD pairs changing more than 10% in AM PNR Transit trip table (>=50 trips in previous iter.): 0.0%
+Percent of OD pairs changing more than 10% in MD PNR Transit trip table (>=50 trips in previous iter.): 0.0%
+Percent of OD pairs changing more than 10% in PM PNR Transit trip table (>=50 trips in previous iter.): 0.0%
+Percent of OD pairs changing more than 10% in AM Walk access transit trip table (>=50 trips in previous iter.): 0.0%
+Percent of OD pairs changing more than 10% in MD Walk access transit trip table (>=50 trips in previous iter.): 0.0%
+Percent of OD pairs changing more than 10% in PM Walk access transit trip table (>=50 trips in previous iter.): 0.0%
+Percent of OD pairs changing more than 10% in AM Truck trip table (>=50 trips in previous iter.): 0.0%
+Percent of OD pairs changing more than 10% in MD Truck trip table (>=50 trips in previous iter.): 0.0%
+Percent of OD pairs changing more than 10% in PM Truck trip table (>=50 trips in previous iter.): 0.0%
+Percent of OD pairs changing more than 10% in AM HOV trip table (>=50 trips in previous iter.): 0.0%
+Percent of OD pairs changing more than 10% in MD HOV trip table (>=50 trips in previous iter.): 0.0%
+Percent of OD pairs changing more than 10% in PM HOV trip table (>=50 trips in previous iter.): 0.0%
+Percent of OD pairs changing more than 10% in AM Drive alone trip table (>=50 trips in previous iter.): 0.0%
+Percent of OD pairs changing more than 10% in MD Drive alone trip table (>=50 trips in previous iter.): 0.0%
+Percent of OD pairs changing more than 10% in PM Drive alone trip table (>=50 trips in previous iter.): 0.0%
+
+------Skim Convergence Statistics------
+Total skim travel time in am TRN_IVT: 	80766386176.0 	 Difference: 	 0.0
+Percent RMSE in am TRN_IVT: 	0.0
+Total skim travel time in pm TRN_IVT: 	80190849024.0 	 Difference: 	 0.0
+Percent RMSE in pm TRN_IVT: 	0.0
+Total skim travel time in am HWY_DA_TIME: 	13891939328.0 	 Difference: 	 0.0
+Percent RMSE in am HWY_DA_TIME: 	0.0
+Total skim travel time in pm HWY_DA_TIME: 	13876102144.0 	 Difference: 	 0.0
+Percent RMSE in pm HWY_DA_TIME: 	0.0
+
+------Network-based Convergence Statistics------
+Number of links with AM volume change greater than 10% or 500 vehicles: 	 0, (0.0%)
+Number of FT=1/2/4/5/6 links with AM volume change greater than 10% or 500 vehicles: 	 0, (0.0%)
+Selected Key Links:
+|   #link_id | Link Name                                                                |   auto_volume_curr |   auto_volume_prev |   Change in Volume |   speed_curr |   speed_prev |   Change in Speed |
+|-----------:|:-------------------------------------------------------------------------|-------------------:|-------------------:|-------------------:|-------------:|-------------:|------------------:|
+|       4166 | Bay Bridge west span (westbound)                                         |            46130.6 |            46130.6 |                  0 |        11.11 |        11.11 |                 0 |
+|      38545 | Bay Bridge west span (eastbound)                                         |            26465.3 |            26465.3 |                  0 |        48.21 |        48.21 |                 0 |
+|    1034144 | 101 between SF and San Mateo County (southbound)                         |            26959.1 |            26959.1 |                  0 |        39.49 |        39.49 |                 0 |
+|    1040116 | 101 between SF and San Mateo County (northbound)                         |            27802.7 |            27802.7 |                  0 |        42.14 |        42.14 |                 0 |
+|    1048514 | 280 between SF and San Mateo County (southbound)                         |            25358.8 |            25358.8 |                  0 |        49.53 |        49.53 |                 0 |
+|    1070169 | 280 between SF and San Mateo County (northbound)                         |            15984.9 |            15984.9 |                  0 |        63.75 |        63.75 |                 0 |
+|    3004982 | I-880 between Hayward and Fremont parallel to BART services (southbound) |            21925.2 |            21925.2 |                  0 |        37.5  |        37.5  |                 0 |
+|    3055218 | I-880 between Hayward and Fremont parallel to BART services (northbound) |            22529.5 |            22529.5 |                  0 |        34.89 |        34.89 |                 0 |
+|    3057003 | 580 between Pleasanton and Livermore (westbound)                         |            26303.8 |            26303.8 |                  0 |        46.79 |        46.79 |                 0 |
+|    3087470 | I-80 corridor between Richmond and Oakland (southbound)                  |            31145.5 |            31145.5 |                  0 |        26.85 |        26.85 |                 0 |
+|    3149662 | I-80 corridor between Richmond and Oakland (northbound)                  |            22193.9 |            22193.9 |                  0 |        51.65 |        51.65 |                 0 |
+|    3160653 | 580 between Pleasanton and Livermore (eastbound)                         |            22985.9 |            22985.9 |                  0 |        55.4  |        55.4  |                 0 |
+|    4045624 | I-80 corridor between Richmond and Oakland (southbound)                  |            21798   |            21798   |                  0 |        38.06 |        38.06 |                 0 |
+|    4089555 | I-80 corridor between Richmond and Oakland (northbound)                  |            11765   |            11765   |                  0 |        63.88 |        63.88 |                 0 |
+Number of links with MD volume change greater than 10% or 500 vehicles: 	 0, (0.0%)
+Number of FT=1/2/4/5/6 links with MD volume change greater than 10% or 500 vehicles: 	 0, (0.0%)
+Selected Key Links:
+|   #link_id | Link Name                                                                |   auto_volume_curr |   auto_volume_prev |   Change in Volume |   speed_curr |   speed_prev |   Change in Speed |
+|-----------:|:-------------------------------------------------------------------------|-------------------:|-------------------:|-------------------:|-------------:|-------------:|------------------:|
+|       4166 | Bay Bridge west span (westbound)                                         |            37361.9 |            37361.9 |                  0 |        47.06 |        47.06 |                 0 |
+|      38545 | Bay Bridge west span (eastbound)                                         |            34047.7 |            34047.7 |                  0 |        50.15 |        50.15 |                 0 |
+|    1034144 | 101 between SF and San Mateo County (southbound)                         |            29779.7 |            29779.7 |                  0 |        52.5  |        52.5  |                 0 |
+|    1040116 | 101 between SF and San Mateo County (northbound)                         |            30459.5 |            30459.5 |                  0 |        56.92 |        56.92 |                 0 |
+|    1048514 | 280 between SF and San Mateo County (southbound)                         |            17376.4 |            17376.4 |                  0 |        64.68 |        64.68 |                 0 |
+|    1070169 | 280 between SF and San Mateo County (northbound)                         |            14683.1 |            14683.1 |                  0 |        64.88 |        64.88 |                 0 |
+|    3004982 | I-880 between Hayward and Fremont parallel to BART services (southbound) |            32384.2 |            32384.2 |                  0 |        53.94 |        53.94 |                 0 |
+|    3055218 | I-880 between Hayward and Fremont parallel to BART services (northbound) |            34654.8 |            34654.8 |                  0 |        49.7  |        49.7  |                 0 |
+|    3057003 | 580 between Pleasanton and Livermore (westbound)                         |            24860.5 |            24860.5 |                  0 |        62.38 |        62.38 |                 0 |
+|    3087470 | I-80 corridor between Richmond and Oakland (southbound)                  |            39071.8 |            39071.8 |                  0 |        50.38 |        50.38 |                 0 |
+|    3149662 | I-80 corridor between Richmond and Oakland (northbound)                  |            37777   |            37777   |                  0 |        51.9  |        51.9  |                 0 |
+|    3160653 | 580 between Pleasanton and Livermore (eastbound)                         |            25747.3 |            25747.3 |                  0 |        61.8  |        61.8  |                 0 |
+|    4045624 | I-80 corridor between Richmond and Oakland (southbound)                  |            25295.1 |            25295.1 |                  0 |        62.11 |        62.11 |                 0 |
+|    4089555 | I-80 corridor between Richmond and Oakland (northbound)                  |            23481.3 |            23481.3 |                  0 |        63.12 |        63.12 |                 0 |
+Number of links with PM volume change greater than 10% or 500 vehicles: 	 0, (0.0%)
+Number of FT=1/2/4/5/6 links with PM volume change greater than 10% or 500 vehicles: 	 0, (0.0%)
+Selected Key Links:
+|   #link_id | Link Name                                                                |   auto_volume_curr |   auto_volume_prev |   Change in Volume |   speed_curr |   speed_prev |   Change in Speed |
+|-----------:|:-------------------------------------------------------------------------|-------------------:|-------------------:|-------------------:|-------------:|-------------:|------------------:|
+|       4166 | Bay Bridge west span (westbound)                                         |            27477.5 |            27477.5 |                  0 |        46.75 |        46.75 |                 0 |
+|      38545 | Bay Bridge west span (eastbound)                                         |            42436.4 |            42436.4 |                  0 |        16.21 |        16.21 |                 0 |
+|    1034144 | 101 between SF and San Mateo County (southbound)                         |            25757.1 |            25757.1 |                  0 |        43.01 |        43.01 |                 0 |
+|    1040116 | 101 between SF and San Mateo County (northbound)                         |            25939.2 |            25939.2 |                  0 |        47.87 |        47.87 |                 0 |
+|    1048514 | 280 between SF and San Mateo County (southbound)                         |            13809.5 |            13809.5 |                  0 |        64.47 |        64.47 |                 0 |
+|    1070169 | 280 between SF and San Mateo County (northbound)                         |            19709.1 |            19709.1 |                  0 |        60.81 |        60.81 |                 0 |
+|    3004982 | I-880 between Hayward and Fremont parallel to BART services (southbound) |            21443   |            21443   |                  0 |        39.6  |        39.6  |                 0 |
+|    3055218 | I-880 between Hayward and Fremont parallel to BART services (northbound) |            23193.8 |            23193.8 |                  0 |        32.06 |        32.06 |                 0 |
+|    3057003 | 580 between Pleasanton and Livermore (westbound)                         |            22902.9 |            22902.9 |                  0 |        55.58 |        55.58 |                 0 |
+|    3087470 | I-80 corridor between Richmond and Oakland (southbound)                  |            24535.1 |            24535.1 |                  0 |        46.33 |        46.33 |                 0 |
+|    3149662 | I-80 corridor between Richmond and Oakland (northbound)                  |            29659.9 |            29659.9 |                  0 |        31.23 |        31.23 |                 0 |
+|    3160653 | 580 between Pleasanton and Livermore (eastbound)                         |            25603.6 |            25603.6 |                  0 |        48.84 |        48.84 |                 0 |
+|    4045624 | I-80 corridor between Richmond and Oakland (southbound)                  |            15359.3 |            15359.3 |                  0 |        59.82 |        59.82 |                 0 |
+|    4089555 | I-80 corridor between Richmond and Oakland (northbound)                  |            20403.8 |            20403.8 |                  0 |        44.03 |        44.03 |                 0 |
+AM highway network VMT:	 40984935.50988388
+Change in AM highway network VMT: 	 0.0
+Daily highway network VMT:	 168405930.876627
+Change in daily highway network VMT: 	 0.0
+AM highway network travel time:	 65944034.51018391
+Change in AM highway network travel time: 	 0.0
+Daily highway network travel time:	 260778868.563414
+Change in daily highway network travel time: 	 0.0
+
