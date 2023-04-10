@@ -50,8 +50,15 @@ class CreateTODScenarios(Component):
         emme_app = self._emme_manager.project(project_path)
         self._emme_manager.modeller(emme_app)
         with self._setup():
-            self._create_highway_scenarios()
-            self._create_transit_scenarios()
+            if self.controller.config.run.create_tod_scenarios.run_highway:
+                self._create_highway_scenarios()
+            else:
+                emmebank_path = self.get_abs_path(self.controller.config.emme.highway_database_path)
+                emmebank = self._emme_manager.emmebank(emmebank_path)
+                ref_scenario = emmebank.scenario(self.controller.config.emme.all_day_scenario_id)
+                self._ref_auto_network = ref_scenario.get_network()
+            if self.controller.config.run.create_tod_scenarios.run_transit:
+                self._create_transit_scenarios()
 
     @_context
     def _setup(self):
