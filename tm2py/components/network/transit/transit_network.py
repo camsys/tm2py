@@ -58,8 +58,6 @@ class PrepareTransitNetwork(Component):
                         scenario.create_extra_attribute(domain, name)
 
                 network = scenario.get_network()
-                # if self.controller.config.transit.get("override_connectors", False): # don't run prepare connector, connectors are created in lasso
-                #     self.prepare_connectors(network, period)
                 self.distribute_nntime(network)
                 self.update_link_trantime(network)
                 # self.calc_link_unreliability(network, period)

@@ -172,7 +172,7 @@ class CreateTODScenarios(Component):
 
             ref_scenario = emmebank.scenario(self.controller.config.emme.all_day_scenario_id)
             attributes = {
-                "LINK": ["@trantime", "@area_type", "@capclass", "@free_flow_speed", "@free_flow_time"],
+                "LINK": ["@trantime", "@area_type", "@capclass", "@free_flow_speed", "@free_flow_time","@drive_toll"],
                 "TRANSIT_LINE": ["@invehicle_factor", "@iboard_penalty", "@xboard_penalty"],
                 "NODE": ["@hdw_fraction", "@wait_pfactor", "@xboard_nodepen"]
             }

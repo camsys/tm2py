@@ -1218,8 +1218,6 @@ class TransitConfig(ConfigItem):
     fare_max_transfer_distance_miles: float
     use_fares: bool
     fare_2015_to_2000_deflator: float
-    override_connectors: bool
-    override_connector_times: bool
     initial_boarding_penalty: Optional[float] = Field(default=None, ge=0)
     transfer_boarding_penalty: Optional[float] = Field(default=None, ge=0)
     input_connector_access_times_path: Optional[pathlib.Path] = Field(default=None)
