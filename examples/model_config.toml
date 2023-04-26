@@ -954,9 +954,6 @@
     fare_matrix_path = "inputs\\trn\\fareMatrix.txt"
     # max expected transfer distance for mode-to-mode transfer fare table generation
     fare_max_transfer_distance_miles = 3
-    # for TAZ instead of TAPs
-    override_connectors = false # don't run prepare connector
-    override_connector_times = false # has removed all drive connectors
     # mask options
     mask_noncombo_allpen = false
     mask_over_3_xfers = false
@@ -964,10 +961,10 @@
     use_fares = true
     fare_2015_to_2000_deflator = 0.698 #180.20/258.27
     # transit assignment methods
-    congested_transit_assignment = true
+    congested_transit_assignment = true # run extended transit assignment if set to false
     trim_demand_before_congested_transit_assignment = true
     output_trimmed_demand_report_path = "output_summaries\\trimmed_demand_{period}_{iteration}.csv"
-    use_ccr = false
+    use_ccr = false # not tested in this version, keep it false
     # peaking factor option
     use_peaking_factor = true
     am_peaking_factor = 1.219
