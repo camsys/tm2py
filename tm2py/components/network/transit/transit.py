@@ -407,7 +407,7 @@ class TransitAssignment(Component):
                     pnr_line_hdw = line_hdw/pnr_peaking_factor 
                 else:
                     pnr_line_hdw = 999
-                non_pnr_line_hdw = line_hdw/non_pnr_peaking_factor
+                non_pnr_line_hdw = line_hdw*non_pnr_peaking_factor
                 if ('pnr' in line_name) and ('egr' in line_name):
                     continue
                 elif ('pnr' in line_name) and ('acc' in line_name):
@@ -426,7 +426,7 @@ class TransitAssignment(Component):
                 line_name = line.id
                 line_hdw = line.headway
                 non_pnr_peaking_factor = self.controller.config.transit.pm_peaking_factor
-                non_pnr_line_hdw = line_hdw/non_pnr_peaking_factor
+                non_pnr_line_hdw = line_hdw*non_pnr_peaking_factor
                 if 'pnr' in line_name:
                     continue
                 else:
@@ -1392,9 +1392,9 @@ class TransitAssignment(Component):
                     "type": "MATRIX_CALCULATION",
                     "constraint": None,
                     "result": f'mf"{skim_name}_DTIME"',
-                    "expression": f'mf"{skim_name}_DTIME" - 60*mf"{skim_name}_DTOLL/{vot}"',
+                    "expression": f'mf"{skim_name}_DTIME" - 60*mf"{skim_name}_DTOLL"/{vot}',
                 }
-            matrix_calc(spec_list, scenario=scenario, num_processors=num_processors)
+            matrix_calc(spec, scenario=scenario, num_processors=num_processors)
 
     def mask_allpen(self, period):
         # Reset skims to 0 if not both local and premium

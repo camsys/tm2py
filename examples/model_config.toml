@@ -937,7 +937,7 @@
     transfer_wait_perception_factor = 3.0
     walk_perception_factor = 2.0
     walk_perception_factor_cbd = 1.0
-    drive_perception_factor = 6.0
+    drive_perception_factor = 3.0
     max_transfers = 3
     # output summary paths
     output_skim_path = "skims/transit"
@@ -1613,8 +1613,8 @@
     type = "PREMIUM"
     assign_type = "TRANSIT"
     in_vehicle_perception_factor = 0.7
-    initial_boarding_penalty = 7.0
-    transfer_boarding_penalty = 7.0
+    initial_boarding_penalty = 5.0
+    transfer_boarding_penalty = 5.0
     headway_fraction = 0.5
     transfer_wait_perception_factor = 3
 [[transit.modes]]
@@ -1623,7 +1623,7 @@
     type = "PREMIUM"
     assign_type = "TRANSIT"
     in_vehicle_perception_factor = 0.7
-    initial_boarding_penalty = 2.0
-    transfer_boarding_penalty = 2.0
+    initial_boarding_penalty = 5.0
+    transfer_boarding_penalty = 5.0
     headway_fraction = 0.3
     transfer_wait_perception_factor = 3
