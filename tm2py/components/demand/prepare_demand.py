@@ -225,6 +225,17 @@ class PrepareHighwayDemand(PrepareDemand):
         jt_full['time_period'] = pd.cut(jt_full.depart_hour, breakpoints, right = False, labels = periods_except_last).cat.add_categories(time_periods_sorted[-1]).fillna(time_periods_sorted[-1]).astype(str)
         it_full['eq_cnt'] = 1/it_full.sampleRate
         jt_full['eq_cnt'] = jt_full.num_participants/jt_full.sampleRate
+        zp_cav = self.controller.config.household.OwnedAV_ZPV_factor
+        zp_tnc = self.controller.config.household.TNC_ZPV_factor
+        # adding zero passenger CAV trips to Auto Modes
+        it_full['eq_cnt'] = np.where(it_full['avAvailable']==1 & it_full['trip_mode'].isin([1,2,3]), it_full['eq_cnt']*(1+float(zp_cav)), it_full['eq_cnt'])
+        # adding zero passenger TNC trips to ride-haul mode
+        it_full['eq_cnt'] = np.where(it_full['trip_mode'].isin([9]), it_full['eq_cnt']*(1+float(zp_tnc)), it_full['eq_cnt'])
+        
+        # adding zero passenger CAV trips to Auto Modes
+        jt_full['eq_cnt'] = np.where(jt_full['avAvailable']==1 & jt_full['trip_mode'].isin([1,2,3]), jt_full['eq_cnt']*(1+float(zp_cav)), jt_full['eq_cnt'])
+        # adding zero passenger TNC trips to ride-haul mode
+        jt_full['eq_cnt'] = np.where(jt_full['trip_mode'].isin([9]), jt_full['eq_cnt']*(1+float(zp_tnc)), jt_full['eq_cnt'])
         
         num_zones = self.num_internal_zones
         OD_full_index = pd.MultiIndex.from_product([range(1,num_zones + 1), range(1,num_zones + 1)])
@@ -233,6 +244,16 @@ class PrepareHighwayDemand(PrepareDemand):
             # combines individual trip list and joint trip list
             combined_trips = pd.concat([it[(it['trip_mode'] == trip_mode)], jt[(jt['trip_mode'] == trip_mode)]])
             combined_sum = combined_trips.groupby(['orig_taz','dest_taz'])['eq_cnt'].sum()
+            return combined_sum.reindex(OD_full_index, fill_value=0).unstack().values
+        
+        def create_zero_passenger_vehicle_trips(it, jt, trip_mode, deadheading_factor, filter_av_trips=False):
+            # combines individual trip list and joint trip list, creates deadheading TNC and AV trips 
+            if filter_av_trips:
+                combined_trips = pd.concat([it[(it['trip_mode'] == trip_mode) & (it['avAvailable']==1)], jt[(jt['trip_mode'] == trip_mode) & (it['avAvailable']==1)]])
+            else:
+                combined_trips = pd.concat([it[(it['trip_mode'] == trip_mode)], jt[(jt['trip_mode'] == trip_mode)]])
+            combined_trips['eq_cnt'] = combined_trips['eq_cnt'] * float(deadheading_factor)
+            combined_sum = combined_trips.groupby(['dest_taz','orig_taz'])['eq_cnt'].sum()
             return combined_sum.reindex(OD_full_index, fill_value=0).unstack().values
 
         # read properties from config
@@ -339,6 +360,7 @@ class PrepareHighwayDemand(PrepareDemand):
 
                     if trip_mode in [1,2,3]: # currently hard-coded based on Travel Mode trip mode codes
                         highway_cache[mode_name_dict[trip_mode]] = combine_trip_lists(it,jt, trip_mode)
+                        highway_cache[mode_name_dict[trip_mode]] = create_zero_passenger_vehicle_trips(it,jt, trip_mode, self.controller.config.household.OwnedAV_ZPV_factor, filter_av_trips=True)
 
                     elif trip_mode == 9:
                         # identify the correct mode split factors for da, sr2, sr3
@@ -351,10 +373,12 @@ class PrepareHighwayDemand(PrepareDemand):
                                 ridehail_split_factors[out_mode] += out_mode_split[out_mode] * splits[key]
                                 
                         ridehail_trips = combine_trip_lists(it,jt, trip_mode)
+                        ridehail_zombie_trips = create_zero_passenger_vehicle_trips(it, jt, trip_mode, self.controller.config.household.TNC_ZPV_factor)
                         for out_mode in ridehail_split_factors:
                             matrix_name =f'{out_mode}_{suffix}'  if suffix else out_mode
                             self.logger.debug(f"Writing out mode {out_mode}")
                             highway_cache[out_mode] += (ridehail_trips * ridehail_split_factors[out_mode]).astype(float).round(2)
+                            highway_cache[out_mode] += (ridehail_zombie_trips * ridehail_split_factors[out_mode]).astype(float).round(2)
                             highway_out_file.write_array(numpy_array = highway_cache[out_mode], name = matrix_name)
        
             highway_out_file.close()
