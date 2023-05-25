@@ -1512,11 +1512,17 @@ class TransitAssignment(Component):
             ("WLK_TRN_WLK", "Walk access and Walk egress"),
         ]
         for name, set_desc in skim_sets:
-            attr_name = f"@board_{name}".lower()
-            create_extra("TRANSIT_SEGMENT", attr_name, overwrite=True, scenario=scenario)
+            initial_board_attr_name = f"@iboard_{name}".lower()
+            direct_xboard_attr_name = f"@dboard_{name}".lower()
+            auxiliary_xboard_attr_name = f"@aboard_{name}".lower()
+            create_extra("TRANSIT_SEGMENT", initial_board_attr_name, overwrite=True, scenario=scenario)
+            create_extra("TRANSIT_SEGMENT", direct_xboard_attr_name, overwrite=True, scenario=scenario)
+            create_extra("TRANSIT_SEGMENT", auxiliary_xboard_attr_name, overwrite=True, scenario=scenario)
             spec = {
                 "type": "EXTENDED_TRANSIT_NETWORK_RESULTS",
-                "on_segments": {"total_boardings": attr_name}
+                "on_segments": {"initial_boardings": initial_board_attr_name,
+                                "transfer_boardings_direct": direct_xboard_attr_name,
+                                "transfer_boardings_indirect": auxiliary_xboard_attr_name},
             }
             network_results(spec, class_name=name, scenario=scenario)
 
@@ -1542,11 +1548,21 @@ class TransitAssignment(Component):
                             "vauteq", 
                             "vcaps", 
                             "vcapt", 
-                            "board_ptw",
-                            "board_wtp",
-                            "board_ktw",
-                            "board_wtk",
-                            "board_wtw"
+                            "initial_board_ptw",
+                            "initial_board_wtp",
+                            "initial_board_ktw",
+                            "initial_board_wtk",
+                            "initial_board_wtw",
+                            "direct_transfer_board_ptw",
+                            "direct_transfer_board_wtp",
+                            "direct_transfer_board_ktw",
+                            "direct_transfer_board_wtk",
+                            "direct_transfer_board_wtw",
+                            "auxiliary_transfer_board_ptw",
+                            "auxiliary_transfer_board_wtp",
+                            "auxiliary_transfer_board_ktw",
+                            "auxiliary_transfer_board_wtk",
+                            "auxiliary_transfer_board_wtw"     
                             ]))
             f.write("\n")
 
@@ -1580,11 +1596,21 @@ class TransitAssignment(Component):
                                                     segment.line.vehicle.auto_equivalent,
                                                     segment.line.vehicle.seated_capacity,
                                                     segment.line.vehicle.total_capacity,
-                                                    segment['@board_pnr_trn_wlk'],
-                                                    segment['@board_wlk_trn_pnr'],
-                                                    segment['@board_knr_trn_wlk'],
-                                                    segment['@board_wlk_trn_knr'],
-                                                    segment['@board_wlk_trn_wlk'],
+                                                    segment['@iboard_pnr_trn_wlk'],
+                                                    segment['@iboard_wlk_trn_pnr'],
+                                                    segment['@iboard_knr_trn_wlk'],
+                                                    segment['@iboard_wlk_trn_knr'],
+                                                    segment['@iboard_wlk_trn_wlk'],
+                                                    segment['@dboard_pnr_trn_wlk'],
+                                                    segment['@dboard_wlk_trn_pnr'],
+                                                    segment['@dboard_knr_trn_wlk'],
+                                                    segment['@dboard_wlk_trn_knr'],
+                                                    segment['@dboard_wlk_trn_wlk'],
+                                                    segment['@aboard_pnr_trn_wlk'],
+                                                    segment['@aboard_wlk_trn_pnr'],
+                                                    segment['@aboard_knr_trn_wlk'],
+                                                    segment['@aboard_wlk_trn_knr'],
+                                                    segment['@aboard_wlk_trn_wlk']
                                                     ]]))
                     f.write("\n")
 
@@ -1751,11 +1777,11 @@ class TransitAssignment(Component):
 
         # map to used modes in apply fares case
         fare_modes = _defaultdict(lambda: set([]))
-        if use_fares:
-            for line in network.transit_lines():
+        for line in network.transit_lines():
+            if use_fares:
                 fare_modes[line["#src_mode"]].add(line.mode.id)
-        else:
-            fare_modes = dict(m, [m])
+            else:
+                fare_modes[line.mode.id].add(line.mode.id)
 
         operator_dict = {
         # mode: network_selection
