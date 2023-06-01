@@ -936,7 +936,7 @@
     initial_wait_perception_factor = 1.5
     transfer_wait_perception_factor = 3.0
     walk_perception_factor = 2.0
-    walk_perception_factor_cbd = 1.0
+    walk_perception_factor_cbd = 2
     drive_perception_factor = 3.0
     max_transfers = 3
     # output summary paths
@@ -1058,6 +1058,12 @@
 	capacity = 2050
 	free_flow_speed = 18
 	critical_speed = 47.087
+	
+[[highway.capclass_lookup]]
+	capclass = 9
+	capacity = 2150
+	free_flow_speed = 55
+	critical_speed = 30.607
 
 [[highway.capclass_lookup]]
 	capclass = 11
@@ -1108,6 +1114,12 @@
 	critical_speed = 47.087
 
 [[highway.capclass_lookup]]
+	capclass = 19
+	capacity = 2150
+	free_flow_speed = 55
+	critical_speed = 30.607
+
+[[highway.capclass_lookup]]
 	capclass = 21
 	capacity = 2100
 	free_flow_speed = 60
@@ -1154,6 +1166,12 @@
 	capacity = 700
 	free_flow_speed = 18
 	critical_speed = 47.087
+	
+[[highway.capclass_lookup]]
+	capclass = 29
+	capacity = 2150
+	free_flow_speed = 55
+	critical_speed = 30.607
 
 [[highway.capclass_lookup]]
 	capclass = 31
@@ -1202,6 +1220,12 @@
 	capacity = 2100
 	free_flow_speed = 18
 	critical_speed = 47.087
+	
+[[highway.capclass_lookup]]
+	capclass = 39
+	capacity = 2150
+	free_flow_speed = 55
+	critical_speed = 30.607
 
 [[highway.capclass_lookup]]
 	capclass = 41
@@ -1250,6 +1274,12 @@
 	capacity = 2150
 	free_flow_speed = 18
 	critical_speed = 47.087
+	
+[[highway.capclass_lookup]]
+	capclass = 49
+	capacity = 2150
+	free_flow_speed = 55
+	critical_speed = 30.607
 
 [[highway.capclass_lookup]]
 	capclass = 51
@@ -1301,9 +1331,9 @@
 
 [[highway.capclass_lookup]]
 	capclass = 59
-	capacity = 0
-	free_flow_speed = 0
-	critical_speed = 3.0
+	capacity = 2150
+	free_flow_speed = 55
+	critical_speed = 30.607
 
 [[highway.capclass_lookup]]
 	capclass = 60
