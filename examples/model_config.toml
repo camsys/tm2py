@@ -931,7 +931,7 @@
     apply_msa_demand = false
     value_of_time = 12.8 # 16.2*(180.20/227.47) https://github.com/BayAreaMetro/modeling-website/wiki/InflationAssumptions
     walk_speed = 3.0
-    transit_speed = 30.0 # default transit speed used to calculate transit time in case any links has missing time from highway network
+    transit_speed = 15.0 # default transit speed used to calculate transit time in case any links has missing time from highway network
     effective_headway_source = "hdw"
     initial_wait_perception_factor = 1.5
     transfer_wait_perception_factor = 3.0
