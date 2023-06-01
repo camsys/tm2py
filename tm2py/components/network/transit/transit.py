@@ -355,11 +355,11 @@ class TransitAssignment(Component):
                         if area_type in [0,1]: 
                             delayfactor = 2.46
                         elif area_type in [2,3]: 
-                            delayfactor = 1.74
+                            delayfactor = 1.99
                         elif area_type==4:
-                            delayfactor = 1.14
+                            delayfactor = 1.39
                         else:
-                            delayfactor = 0.08
+                            delayfactor = 0.33
                     bus_time = tran_link["@trantime"] + (delayfactor * tran_link.length)
                     tran_link["@trantime"] = bus_time                   
 
