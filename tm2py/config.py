@@ -104,13 +104,6 @@ class WarmStartConfig(ConfigItem):
     truck_highway_demand_file: Optional[str] = Field(default="")
 
 @dataclass(frozen=True)
-class TODConfig(ConfigItem):
-    """
-    """
-    run_highway: Optional[bool] = Field(default=True)
-    run_transit: Optional[bool] = Field(default=True)
-
-@dataclass(frozen=True)
 class RunConfig(ConfigItem):
     """Model run parameters.
 
@@ -135,7 +128,7 @@ class RunConfig(ConfigItem):
     end_iteration: int = Field(gt=0)
     warmstart: WarmStartConfig = WarmStartConfig()
     start_component: Optional[Union[ComponentNames, EmptyString]] = Field(default="")
-    create_tod_scenarios: TODConfig = TODConfig()
+    
 
     @validator("end_iteration", allow_reuse=True)
     def end_iteration_gt_start(cls, value, values):

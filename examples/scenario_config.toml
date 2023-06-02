@@ -33,12 +33,6 @@
     start_iteration = 0
     end_iteration = 3
 
-    [run.create_tod_scenarios]
-        # set run_highway to false only when create_tod_scenario has been run for highway
-        # because creating transit tod scenarios proceduce will copy calculated link attributs from auto to transit
-        run_highway = false
-        run_transit = true
-
     [run.warmstart]
         warmstart = true
         warmstart_check = true
