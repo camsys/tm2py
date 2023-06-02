@@ -190,15 +190,15 @@ class HouseholdModel(Component):
     def _stop_java(self):
         run_process(['taskkill /im "java.exe" /F'])
     
-    def _update_telecommute_constants(self):
-        telecommute_parameters = {'ITER':0, 'MODEL_YEAR': 2015, 'MODEL_DIR': self.controller.config.household.ctramp_run_dir}
-        commands = [
-        "cd /d {}".format(self.controller.config.household.ctramp_run_dir),
-        "CALL {}\\CTRAMP\\runtime\\SetPath.bat".format(self.controller.config.household.ctramp_run_dir),
-        ] + [
-        f"set {key}={telecommute_parameters[key]}" for key in telecommute_parameters
-        ] + [
-        "%PYTHON_PATH%\\python {}\\CTRAMP\\scripts\\preprocess\\updateTelecommuteConstants.py".format(self.controller.config.household.ctramp_run_dir),
-        "copy /Y main\\telecommute_constants_00.csv main\\telecommute_constants.csv"
-        ]
-        run_process(commands, name="update_telecommute_constants")
+    #def _update_telecommute_constants(self):
+    #    telecommute_parameters = {'ITER':0, 'MODEL_YEAR': 2015, 'MODEL_DIR': self.controller.config.household.ctramp_run_dir}
+    #    commands = [
+    #    "cd /d {}".format(self.controller.config.household.ctramp_run_dir),
+    #    "CALL {}\\CTRAMP\\runtime\\SetPath.bat".format(self.controller.config.household.ctramp_run_dir),
+    #    ] + [
+    #    f"set {key}={telecommute_parameters[key]}" for key in telecommute_parameters
+    #    ] + [
+    #    "%PYTHON_PATH%\\python {}\\CTRAMP\\scripts\\preprocess\\updateTelecommuteConstants.py".format(self.controller.config.household.ctramp_run_dir),
+    #    "copy /Y main\\telecommute_constants_00.csv main\\telecommute_constants.csv"
+    #    ]
+    #    run_process(commands, name="update_telecommute_constants")
