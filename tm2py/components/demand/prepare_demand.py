@@ -227,16 +227,7 @@ class PrepareHighwayDemand(PrepareDemand):
         jt_full['eq_cnt'] = jt_full.num_participants/jt_full.sampleRate
         zp_cav = self.controller.config.household.OwnedAV_ZPV_factor
         zp_tnc = self.controller.config.household.TNC_ZPV_factor
-        # adding zero passenger CAV trips to Auto Modes
-        it_full['eq_cnt'] = np.where(it_full['avAvailable']==1 & it_full['trip_mode'].isin([1,2,3]), it_full['eq_cnt']*(1+float(zp_cav)), it_full['eq_cnt'])
-        # adding zero passenger TNC trips to ride-haul mode
-        it_full['eq_cnt'] = np.where(it_full['trip_mode'].isin([9]), it_full['eq_cnt']*(1+float(zp_tnc)), it_full['eq_cnt'])
-        
-        # adding zero passenger CAV trips to Auto Modes
-        jt_full['eq_cnt'] = np.where(jt_full['avAvailable']==1 & jt_full['trip_mode'].isin([1,2,3]), jt_full['eq_cnt']*(1+float(zp_cav)), jt_full['eq_cnt'])
-        # adding zero passenger TNC trips to ride-haul mode
-        jt_full['eq_cnt'] = np.where(jt_full['trip_mode'].isin([9]), jt_full['eq_cnt']*(1+float(zp_tnc)), jt_full['eq_cnt'])
-        
+
         num_zones = self.num_internal_zones
         OD_full_index = pd.MultiIndex.from_product([range(1,num_zones + 1), range(1,num_zones + 1)])
         
@@ -246,15 +237,24 @@ class PrepareHighwayDemand(PrepareDemand):
             combined_sum = combined_trips.groupby(['orig_taz','dest_taz'])['eq_cnt'].sum()
             return combined_sum.reindex(OD_full_index, fill_value=0).unstack().values
         
-        def create_zero_passenger_vehicle_trips(it, jt, trip_mode, deadheading_factor, filter_av_trips=False):
-            # combines individual trip list and joint trip list, creates deadheading TNC and AV trips 
-            if filter_av_trips:
-                combined_trips = pd.concat([it[(it['trip_mode'] == trip_mode) & (it['avAvailable']==1)], jt[(jt['trip_mode'] == trip_mode) & (it['avAvailable']==1)]])
-            else:
-                combined_trips = pd.concat([it[(it['trip_mode'] == trip_mode)], jt[(jt['trip_mode'] == trip_mode)]])
-            combined_trips['eq_cnt'] = combined_trips['eq_cnt'] * float(deadheading_factor)
-            combined_sum = combined_trips.groupby(['dest_taz','orig_taz'])['eq_cnt'].sum()
-            return combined_sum.reindex(OD_full_index, fill_value=0).unstack().values
+        def create_zero_passenger_trips(trips, deadheading_factor, trip_modes=[1,2,3]):
+            zpv_trips = trips.loc[(trips['avAvailable']==1) & (trips['trip_mode'].isin(trip_modes))]
+            zpv_trips['eq_cnt'] = zpv_trips['eq_cnt'] * deadheading_factor
+            zpv_trips = zpv_trips.rename(columns={'dest_taz': 'orig_taz', 
+                                        'orig_taz': 'dest_taz'})
+            return zpv_trips
+
+        # create zero passenger trips for auto modes
+        it_zpav_trp = create_zero_passenger_trips(it_full, zp_cav, trip_modes=[1,2,3])
+        jt_zpav_trp = create_zero_passenger_trips(jt_full, zp_cav, trip_modes=[1,2,3])
+
+        # create zero passenger trips for TNC modes
+        it_zptnc_trp = create_zero_passenger_trips(it_full, zp_tnc, trip_modes=[9])
+        jt_zptnc_trp = create_zero_passenger_trips(jt_full, zp_tnc, trip_modes=[9])
+
+        # Combining zero passenger trips to trip files
+        it_full = pd.concat([it_full, it_zpav_trp, it_zptnc_trp], ignore_index=True).reset_index(drop=True)
+        jt_full = pd.concat([jt_full, jt_zpav_trp, jt_zptnc_trp], ignore_index=True).reset_index(drop=True)
 
         # read properties from config
         
@@ -360,7 +360,6 @@ class PrepareHighwayDemand(PrepareDemand):
 
                     if trip_mode in [1,2,3]: # currently hard-coded based on Travel Mode trip mode codes
                         highway_cache[mode_name_dict[trip_mode]] = combine_trip_lists(it,jt, trip_mode)
-                        highway_cache[mode_name_dict[trip_mode]] = create_zero_passenger_vehicle_trips(it,jt, trip_mode, self.controller.config.household.OwnedAV_ZPV_factor, filter_av_trips=True)
 
                     elif trip_mode == 9:
                         # identify the correct mode split factors for da, sr2, sr3
@@ -378,7 +377,6 @@ class PrepareHighwayDemand(PrepareDemand):
                             matrix_name =f'{out_mode}_{suffix}'  if suffix else out_mode
                             self.logger.debug(f"Writing out mode {out_mode}")
                             highway_cache[out_mode] += (ridehail_trips * ridehail_split_factors[out_mode]).astype(float).round(2)
-                            highway_cache[out_mode] += (ridehail_zombie_trips * ridehail_split_factors[out_mode]).astype(float).round(2)
                             highway_out_file.write_array(numpy_array = highway_cache[out_mode], name = matrix_name)
        
             highway_out_file.close()
