@@ -372,7 +372,6 @@ class PrepareHighwayDemand(PrepareDemand):
                                 ridehail_split_factors[out_mode] += out_mode_split[out_mode] * splits[key]
                                 
                         ridehail_trips = combine_trip_lists(it,jt, trip_mode)
-                        ridehail_zombie_trips = create_zero_passenger_vehicle_trips(it, jt, trip_mode, self.controller.config.household.TNC_ZPV_factor)
                         for out_mode in ridehail_split_factors:
                             matrix_name =f'{out_mode}_{suffix}'  if suffix else out_mode
                             self.logger.debug(f"Writing out mode {out_mode}")
