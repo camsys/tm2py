@@ -188,4 +188,3 @@ class HouseholdModel(Component):
 
     def _stop_java(self):
         run_process(['taskkill /im "java.exe" /F'])
-    

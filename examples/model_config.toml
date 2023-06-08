@@ -933,13 +933,13 @@
     apply_msa_demand = false
     value_of_time = 12.8 # 16.2*(180.20/227.47) https://github.com/BayAreaMetro/modeling-website/wiki/InflationAssumptions
     walk_speed = 3.0
-    transit_speed = 30.0 # default transit speed used to calculate transit time in case any links has missing time from highway network
+    transit_speed = 15.0 # default transit speed used to calculate transit time in case any links has missing time from highway network
     effective_headway_source = "hdw"
     initial_wait_perception_factor = 1.5
     transfer_wait_perception_factor = 3.0
     walk_perception_factor = 2.0
-    walk_perception_factor_cbd = 1.0
-    drive_perception_factor = 6.0
+    walk_perception_factor_cbd = 2
+    drive_perception_factor = 3.0
     max_transfers = 3
     # output summary paths
     output_skim_path = "skims/transit"
@@ -956,9 +956,6 @@
     fare_matrix_path = "inputs\\trn\\fareMatrix.txt"
     # max expected transfer distance for mode-to-mode transfer fare table generation
     fare_max_transfer_distance_miles = 3
-    # for TAZ instead of TAPs
-    override_connectors = false # don't run prepare connector
-    override_connector_times = false # has removed all drive connectors
     # mask options
     mask_noncombo_allpen = false
     mask_over_3_xfers = false
@@ -966,10 +963,10 @@
     use_fares = true
     fare_2015_to_2000_deflator = 0.698 #180.20/258.27
     # transit assignment methods
-    congested_transit_assignment = true
+    congested_transit_assignment = true # run extended transit assignment if set to false
     trim_demand_before_congested_transit_assignment = true
     output_trimmed_demand_report_path = "output_summaries\\trimmed_demand_{period}_{iteration}.csv"
-    use_ccr = false
+    use_ccr = false # not tested in this version, keep it false
     # peaking factor option
     use_peaking_factor = true
     am_peaking_factor = 1.219
@@ -1063,6 +1060,12 @@
 	capacity = 2050
 	free_flow_speed = 18
 	critical_speed = 47.087
+	
+[[highway.capclass_lookup]]
+	capclass = 9
+	capacity = 2150
+	free_flow_speed = 55
+	critical_speed = 30.607
 
 [[highway.capclass_lookup]]
 	capclass = 11
@@ -1113,6 +1116,12 @@
 	critical_speed = 47.087
 
 [[highway.capclass_lookup]]
+	capclass = 19
+	capacity = 2150
+	free_flow_speed = 55
+	critical_speed = 30.607
+
+[[highway.capclass_lookup]]
 	capclass = 21
 	capacity = 2100
 	free_flow_speed = 60
@@ -1159,6 +1168,12 @@
 	capacity = 700
 	free_flow_speed = 18
 	critical_speed = 47.087
+	
+[[highway.capclass_lookup]]
+	capclass = 29
+	capacity = 2150
+	free_flow_speed = 55
+	critical_speed = 30.607
 
 [[highway.capclass_lookup]]
 	capclass = 31
@@ -1207,6 +1222,12 @@
 	capacity = 2100
 	free_flow_speed = 18
 	critical_speed = 47.087
+	
+[[highway.capclass_lookup]]
+	capclass = 39
+	capacity = 2150
+	free_flow_speed = 55
+	critical_speed = 30.607
 
 [[highway.capclass_lookup]]
 	capclass = 41
@@ -1255,6 +1276,12 @@
 	capacity = 2150
 	free_flow_speed = 18
 	critical_speed = 47.087
+	
+[[highway.capclass_lookup]]
+	capclass = 49
+	capacity = 2150
+	free_flow_speed = 55
+	critical_speed = 30.607
 
 [[highway.capclass_lookup]]
 	capclass = 51
@@ -1306,9 +1333,9 @@
 
 [[highway.capclass_lookup]]
 	capclass = 59
-	capacity = 0
-	free_flow_speed = 0
-	critical_speed = 3.0
+	capacity = 2150
+	free_flow_speed = 55
+	critical_speed = 30.607
 
 [[highway.capclass_lookup]]
 	capclass = 60
@@ -1618,8 +1645,8 @@
     type = "PREMIUM"
     assign_type = "TRANSIT"
     in_vehicle_perception_factor = 0.7
-    initial_boarding_penalty = 7.0
-    transfer_boarding_penalty = 7.0
+    initial_boarding_penalty = 5.0
+    transfer_boarding_penalty = 5.0
     headway_fraction = 0.5
     transfer_wait_perception_factor = 3
 [[transit.modes]]
@@ -1628,7 +1655,7 @@
     type = "PREMIUM"
     assign_type = "TRANSIT"
     in_vehicle_perception_factor = 0.7
-    initial_boarding_penalty = 2.0
-    transfer_boarding_penalty = 2.0
+    initial_boarding_penalty = 5.0
+    transfer_boarding_penalty = 5.0
     headway_fraction = 0.3
     transfer_wait_perception_factor = 3
