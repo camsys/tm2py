@@ -192,20 +192,20 @@ class PrepareNetwork(Component):
         assert self.controller.iteration == 0
         toll_index = self._get_toll_indices(toll_file_path = self.get_abs_path(toll_file_path))
         for link in network.links():
+            index = int(
+                link["@tollbooth"] * 1000
+                + link["@tollseg"] * 10
+                + link["@useclass"]
+            )
+            data_row = toll_index.get(index)
+            if data_row is None:
+                self.logger.warn(
+                    f"set tolls failed index lookup {index}, link {link.id}",
+                    indent=True,
+                )
+                continue  # tolls will remain at zero
             # set bridgetoll
             if link["@tollbooth"] > 0 and link["@tollbooth"] < valuetoll_start_tollbooth_code:
-                index = int(
-                    link["@tollbooth"] * 1000
-                    + link["@tollseg"] * 10
-                    + link["@useclass"]
-                )
-                data_row = toll_index.get(index)
-                if data_row is None:
-                    self.logger.warn(
-                        f"set tolls failed index lookup {index}, link {link.id}",
-                        indent=True,
-                    )
-                    continue  # tolls will remain at zero
                 for src_veh, dst_veh in zip(src_veh_groups, dst_veh_groups):
                     link[f"@bridgetoll_{dst_veh}"] = (
                         float(data_row[f"toll{time_period.lower()}_{src_veh}"]) * 100
