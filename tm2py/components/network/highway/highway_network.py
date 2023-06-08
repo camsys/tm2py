@@ -212,7 +212,7 @@ class PrepareNetwork(Component):
                             float(data_row[f"toll{time_period.lower()}_{src_veh}"]) * 100
                         )
                 # set valuetoll
-                elif link["@tollbooth"] >= valuetoll_start_tollbooth_code:
+                else:
                     if run_dynamic_toll: # initialize valuetoll to 0
                         for src_veh, dst_veh in zip(src_veh_groups, dst_veh_groups):
                             link[f"@valuetoll_{dst_veh}"] = 0
