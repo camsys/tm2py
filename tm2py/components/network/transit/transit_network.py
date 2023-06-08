@@ -430,6 +430,11 @@ class ApplyFares(Component):
                         {"type": "text2", "content": "No lines associated with this faresystem"})
                 elif fs_data["STRUCTURE"] == "FLAT":
                     self.generate_base_board(lines, fs_data["IBOARDFARE"])
+                # Added for 2050 integrated fare policy
+                elif fs_data["STRUCTURE"] == "DISTANCE":
+                    self.generate_base_board(lines, fs_data["IBOARDFARE"])
+                    self.generate_invehicle_cost(lines, fs_data["UNITFARE"])
+     
                 elif fs_data["STRUCTURE"] == "FROMTO":
                     fare_matrix = fare_matrices[fs_data["FAREMATRIX ID"]]
                     self.generate_fromto_approx(network, lines, fare_matrix, fs_data)
@@ -505,6 +510,11 @@ class ApplyFares(Component):
                     fs_data["FAREFROMFS"] = [float(x) for x in fs_data["FAREFROMFS"].split(",")]
                 if fs_data["STRUCTURE"] == "FLAT":
                     fs_data["IBOARDFARE"] = float(fs_data["IBOARDFARE"])
+                # Added for 2050 integrated fare policy
+                elif fs_data["STRUCTURE"] == "DISTANCE":
+                    fs_data["IBOARDFARE"] = float(fs_data["IBOARDFARE"])
+                    fs_data["UNITFARE"] = float(fs_data["UNITFARE"])
+                
                 elif fs_data["STRUCTURE"] == "FROMTO":
                     fmi, one, farematrix_id = fs_data["FAREMATRIX"].split(".")
                     fs_data["FAREMATRIX ID"] = int(farematrix_id)
@@ -537,6 +547,16 @@ class ApplyFares(Component):
         for line in lines:
             for segment in line.segments():
                 segment["@board_cost"] = board_fare
+    
+    # Added for 2050 integrated fare policy 
+    def generate_invehicle_cost(self, lines, unit_fare):
+        self._log.append(
+            {"type": "text2", "content": "Set @invehicle_fare to {} on {} lines".format(unit_fare, len(lines))})
+        for line in lines:
+            for segment in line.segments():
+                distance = segment.link.length
+                segment["@invehicle_cost"] = distance * unit_fare
+    
 
     def generate_fromto_approx(self, network, lines, fare_matrix, fs_data):
         network.create_attribute("LINK", "invehicle_cost")

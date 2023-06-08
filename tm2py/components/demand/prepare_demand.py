@@ -225,7 +225,9 @@ class PrepareHighwayDemand(PrepareDemand):
         jt_full['time_period'] = pd.cut(jt_full.depart_hour, breakpoints, right = False, labels = periods_except_last).cat.add_categories(time_periods_sorted[-1]).fillna(time_periods_sorted[-1]).astype(str)
         it_full['eq_cnt'] = 1/it_full.sampleRate
         jt_full['eq_cnt'] = jt_full.num_participants/jt_full.sampleRate
-        
+        zp_cav = self.controller.config.household.OwnedAV_ZPV_factor
+        zp_tnc = self.controller.config.household.TNC_ZPV_factor
+
         num_zones = self.num_internal_zones
         OD_full_index = pd.MultiIndex.from_product([range(1,num_zones + 1), range(1,num_zones + 1)])
         
@@ -234,6 +236,25 @@ class PrepareHighwayDemand(PrepareDemand):
             combined_trips = pd.concat([it[(it['trip_mode'] == trip_mode)], jt[(jt['trip_mode'] == trip_mode)]])
             combined_sum = combined_trips.groupby(['orig_taz','dest_taz'])['eq_cnt'].sum()
             return combined_sum.reindex(OD_full_index, fill_value=0).unstack().values
+        
+        def create_zero_passenger_trips(trips, deadheading_factor, trip_modes=[1,2,3]):
+            zpv_trips = trips.loc[(trips['avAvailable']==1) & (trips['trip_mode'].isin(trip_modes))]
+            zpv_trips['eq_cnt'] = zpv_trips['eq_cnt'] * deadheading_factor
+            zpv_trips = zpv_trips.rename(columns={'dest_taz': 'orig_taz', 
+                                        'orig_taz': 'dest_taz'})
+            return zpv_trips
+
+        # create zero passenger trips for auto modes
+        it_zpav_trp = create_zero_passenger_trips(it_full, zp_cav, trip_modes=[1,2,3])
+        jt_zpav_trp = create_zero_passenger_trips(jt_full, zp_cav, trip_modes=[1,2,3])
+
+        # create zero passenger trips for TNC modes
+        it_zptnc_trp = create_zero_passenger_trips(it_full, zp_tnc, trip_modes=[9])
+        jt_zptnc_trp = create_zero_passenger_trips(jt_full, zp_tnc, trip_modes=[9])
+
+        # Combining zero passenger trips to trip files
+        it_full = pd.concat([it_full, it_zpav_trp, it_zptnc_trp], ignore_index=True).reset_index(drop=True)
+        jt_full = pd.concat([jt_full, jt_zpav_trp, jt_zptnc_trp], ignore_index=True).reset_index(drop=True)
 
         # read properties from config
         
