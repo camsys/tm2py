@@ -31,7 +31,6 @@ class HouseholdModel(Component):
         """
         if self.controller.config.household.copy_from_examples:
             self._move_inputs_to_run_dir()
-        #self._update_telecommute_constants()
         self._start_household_manager()
         self._start_matrix_manager()
         self._start_jppf_driver()
