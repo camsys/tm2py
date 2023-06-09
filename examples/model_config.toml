@@ -595,7 +595,7 @@
         # to toll specific links (each link with a different toll needs a different TOLLBOOTH code).
         valuetoll_start_tollbooth_code = 11
         # temporary settings for dynamic tolling
-        run_dynamic_toll = true
+        run_dynamic_toll = false
         max_dynamic_toll_iter = 5
         dynamic_toll_inner_iter = 20
         valuetoll_increment = 0.1
