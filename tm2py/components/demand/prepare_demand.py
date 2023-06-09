@@ -245,16 +245,17 @@ class PrepareHighwayDemand(PrepareDemand):
             return zpv_trips
 
         # create zero passenger trips for auto modes
-        it_zpav_trp = create_zero_passenger_trips(it_full, zp_cav, trip_modes=[1,2,3])
-        jt_zpav_trp = create_zero_passenger_trips(jt_full, zp_cav, trip_modes=[1,2,3])
-
-        # create zero passenger trips for TNC modes
-        it_zptnc_trp = create_zero_passenger_trips(it_full, zp_tnc, trip_modes=[9])
-        jt_zptnc_trp = create_zero_passenger_trips(jt_full, zp_tnc, trip_modes=[9])
-
-        # Combining zero passenger trips to trip files
-        it_full = pd.concat([it_full, it_zpav_trp, it_zptnc_trp], ignore_index=True).reset_index(drop=True)
-        jt_full = pd.concat([jt_full, jt_zpav_trp, jt_zptnc_trp], ignore_index=True).reset_index(drop=True)
+        if it_full['avAvailable'].sum()>0:
+            it_zpav_trp = create_zero_passenger_trips(it_full, zp_cav, trip_modes=[1,2,3])
+            it_zptnc_trp = create_zero_passenger_trips(it_full, zp_tnc, trip_modes=[9])
+            # Combining zero passenger trips to trip files
+            it_full = pd.concat([it_full, it_zpav_trp, it_zptnc_trp], ignore_index=True).reset_index(drop=True)
+            
+        if jt_full['avAvailable'].sum()>0:
+            jt_zpav_trp = create_zero_passenger_trips(jt_full, zp_cav, trip_modes=[1,2,3])
+            jt_zptnc_trp = create_zero_passenger_trips(jt_full, zp_tnc, trip_modes=[9])
+            # Combining zero passenger trips to trip files
+            jt_full = pd.concat([jt_full, jt_zpav_trp, jt_zptnc_trp], ignore_index=True).reset_index(drop=True)
 
         # read properties from config
         
