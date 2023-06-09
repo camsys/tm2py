@@ -291,6 +291,8 @@ class HouseholdConfig(ConfigItem):
     ctramp_indiv_trip_file: str
     ctramp_joint_trip_file: str
     ctramp_hh_file: str
+    OwnedAV_ZPV_factor: float
+    TNC_ZPV_factor: float
     rideshare_mode_split: Dict[str,float]
     taxi_split: Dict[str,float]
     single_tnc_split: Dict[str,float]
