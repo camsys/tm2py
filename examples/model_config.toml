@@ -52,6 +52,8 @@
     highway_demand_file = "demand_matrices/highway/household/TAZ_Demand_{period}.omx"
     transit_demand_file = "demand_matrices/transit/trn_demand_v9_trim_{period}.omx"
     active_demand_file = "demand_matrices/active/nm_demand_{period}.omx"
+    hsr_demand_file = "demand_matrices/transit/{year}_trips_transitHsr_{period}.omx"
+    interregional_demand_file = "demand_matrices/transit/{year}_trips_transitInterReg_{period}.omx"
     ctramp_indiv_trip_file = "main/indivTripData_{iteration}.csv"
     ctramp_joint_trip_file = "main/jointTripData_{iteration}.csv"
     ctramp_hh_file = "main/householdData_{iteration}.csv"

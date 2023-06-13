@@ -285,6 +285,8 @@ class HouseholdConfig(ConfigItem):
     highway_demand_file: str
     transit_demand_file: str
     active_demand_file: str
+    hsr_demand_file: str
+    interregional_demand_file: str
     ctramp_run_dir: pathlib.Path
     host_ip_address: str
     sample_rate_iteration: list

@@ -9,6 +9,7 @@ import pathlib
 import numpy as np
 import pandas as pd
 from collections import defaultdict
+import openmatrix as _omx
 
 from tm2py.components.component import Component
 from tm2py.emme.matrix import OMXManager
@@ -297,6 +298,12 @@ class PrepareHighwayDemand(PrepareDemand):
                 self.get_abs_path(self.controller.config.household.transit_demand_file).format(period=time_period), 'w')
             active_out_file = OMXManager(
                 self.get_abs_path(self.controller.config.household.active_demand_file).format(period=time_period), 'w')
+            
+            hsr_trips_file = _omx.open_file(
+                self.get_abs_path(self.controller.config.household.hsr_demand_file).format(year=self.controller.config.scenario.year, period=time_period))
+                
+            interregional_trips_file = _omx.open_file(
+                self.get_abs_path(self.controller.config.household.interregional_demand_file).format(year=self.controller.config.scenario.year, period=time_period))
 
             highway_out_file.open()
             transit_out_file.open()
@@ -316,24 +323,25 @@ class PrepareHighwayDemand(PrepareDemand):
                 elif trip_mode == 6:
                     matrix_name = "WLK_TRN_WLK"
                     self.logger.debug(f"Writing out mode WLK_TRN_WLK")
-                    transit_out_file.write_array(numpy_array=combine_trip_lists(it,jt, trip_mode), name = matrix_name)
+                    other_trn_trips = np.array(hsr_trips_file[matrix_name])+np.array(interregional_trips_file[matrix_name])
+                    transit_out_file.write_array(numpy_array=(combine_trip_lists(it,jt, trip_mode)+other_trn_trips), name = matrix_name)
                     
                 elif trip_mode in [7,8]:
                     it_outbound, it_inbound = it[it.inbound == 0], it[it.inbound == 1]
                     jt_outbound, jt_inbound = jt[jt.inbound == 0], jt[jt.inbound == 1]
                     
                     matrix_name = f'{mode_name_dict[trip_mode].upper()}_TRN_WLK' 
-                    
+                    other_trn_trips = np.array(hsr_trips_file[matrix_name])+np.array(interregional_trips_file[matrix_name])
                     self.logger.debug(f"Writing out mode {mode_name_dict[trip_mode].upper() + '_TRN_WLK'}")
                     transit_out_file.write_array(
-                        numpy_array=combine_trip_lists(it_outbound,jt_outbound, trip_mode), 
+                        numpy_array=(combine_trip_lists(it_outbound,jt_outbound, trip_mode)+other_trn_trips), 
                         name = matrix_name)
                     
                     matrix_name = f'WLK_TRN_{mode_name_dict[trip_mode].upper()}' 
-                    
+                    other_trn_trips = np.array(hsr_trips_file[matrix_name])+np.array(interregional_trips_file[matrix_name])
                     self.logger.debug(f"Writing out mode {'WLK_TRN_' + mode_name_dict[trip_mode].upper()}")
                     transit_out_file.write_array(
-                        numpy_array=combine_trip_lists(it_inbound,jt_inbound, trip_mode), 
+                        numpy_array=(combine_trip_lists(it_inbound,jt_inbound, trip_mode)+other_trn_trips), 
                         name = matrix_name)
             
 
@@ -382,7 +390,7 @@ class PrepareHighwayDemand(PrepareDemand):
             highway_out_file.close()
             transit_out_file.close()
             active_out_file.close()
-    
+
     @property
     def num_internal_zones(self):
         return len(pd.read_csv(
