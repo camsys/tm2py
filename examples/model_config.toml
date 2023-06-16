@@ -57,7 +57,7 @@
     ctramp_indiv_trip_file = "main/indivTripData_{iteration}.csv"
     ctramp_joint_trip_file = "main/jointTripData_{iteration}.csv"
     ctramp_hh_file = "main/householdData_{iteration}.csv"
-    copy_from_examples = false
+    copy_from_examples = true
     host_ip_address = "10.1.36.121"
     ctramp_run_dir = 'D:\MTC\9-county\CTRAMP'
     sample_rate_iteration = [0.15, 0.30, 1.0]
