@@ -1811,8 +1811,10 @@ class TransitAssignment(Component):
                 # for all rails
                 class_name = access_mode
                 demand_matrix = "mf%s_%s" % (access_mode, period.name)
-                sta2sta_spec['transit_line_selections']['first_boarding'] = "mode="+",".join([fare_modes[m] for m in operator_dict.values()]) 
-                sta2sta_spec['transit_line_selections']['last_alighting'] = "mode="+",".join([fare_modes[m] for m in operator_dict.values()]) 
+                all_modes = [fare_modes[m] for m in operator_dict.values()]
+                all_modes_list = [m for sublist in all_modes for m in sublist]
+                sta2sta_spec['transit_line_selections']['first_boarding'] = "mode="+",".join(all_modes_list) 
+                sta2sta_spec['transit_line_selections']['last_alighting'] = "mode="+",".join(all_modes_list) 
                 sta2sta_spec['analyzed_demand'] = demand_matrix
                 
                 output_file_name = self.get_abs_path(self.controller.config.transit.output_station_to_station_flow_path)
