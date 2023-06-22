@@ -1791,6 +1791,7 @@ class TransitAssignment(Component):
 
         with _m.logbook_trace("Writing station-to-station summaries for period %s" % period.name):
             for access_mode in _all_access_modes:
+                # separate by mode
                 for op, cut in operator_dict.items():
                     class_name = access_mode
                     demand_matrix = "mf%s_%s" % (access_mode, period.name)
@@ -1806,6 +1807,21 @@ class TransitAssignment(Component):
                             scenario=scenario,
                             append_to_output_file=False,
                             class_name=class_name)
+                
+                # for all rails
+                class_name = access_mode
+                demand_matrix = "mf%s_%s" % (access_mode, period.name)
+                sta2sta_spec['transit_line_selections']['first_boarding'] = "mode="+",".join([fare_modes[m] for m in operator_dict.values()]) 
+                sta2sta_spec['transit_line_selections']['last_alighting'] = "mode="+",".join([fare_modes[m] for m in operator_dict.values()]) 
+                sta2sta_spec['analyzed_demand'] = demand_matrix
+                
+                output_file_name = self.get_abs_path(self.controller.config.transit.output_station_to_station_flow_path)
+                output_path = output_file_name.format(operator="all rail", set_name=access_mode, period=period.name)
+                sta2sta(specification=sta2sta_spec,
+                        output_file=output_path,
+                        scenario=scenario,
+                        append_to_output_file=False,
+                        class_name=class_name)
 
 
     def export_transfer_at_stops(self, network, period, scenario):
