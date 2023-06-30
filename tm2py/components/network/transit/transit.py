@@ -1777,34 +1777,82 @@ class TransitAssignment(Component):
 
         # map to used modes in apply fares case
         fare_modes = _defaultdict(lambda: set([]))
+        operator_agency_dict = _defaultdict(lambda: set([]))
+        rail_line_id_list = []
         for line in network.transit_lines():
             if use_fares:
                 fare_modes[line["#src_mode"]].add(line.mode.id)
             else:
                 fare_modes[line.mode.id].add(line.mode.id)
+            # get all operators
+            operator_id = line.id.split("_")[0]
+            agency_id = line.id.split("_")[1]
+            operator_agency_dict[operator_id].add(agency_id)
+            # get all rail lines
+            if line["#src_mode"] in ["h", "r"]:
+                if line.id not in rail_line_id_list:
+                    rail_line_id_list.append(line.id)
 
-        operator_dict = {
+        rail_operator_mode_dict = {
         # mode: network_selection
             'bart': "h",
-            'caltrain': "r"
+            'caltrain and other rails': "r"
         }
 
         with _m.logbook_trace("Writing station-to-station summaries for period %s" % period.name):
             for access_mode in _all_access_modes:
-                for op, cut in operator_dict.items():
-                    class_name = access_mode
-                    demand_matrix = "mf%s_%s" % (access_mode, period.name)
-                    output_file_name = self.get_abs_path(self.controller.config.transit.output_station_to_station_flow_path)
-
+                class_name = access_mode
+                demand_matrix = "mf%s_%s" % (access_mode, period.name)
+                output_file_name = self.get_abs_path(self.controller.config.transit.output_station_to_station_flow_path)
+                sta2sta_spec['analyzed_demand'] = demand_matrix
+                
+                # separate by rail mode
+                for op, cut in rail_operator_mode_dict.items():
                     sta2sta_spec['transit_line_selections']['first_boarding'] = "mode="+",".join(list(fare_modes[cut])) 
                     sta2sta_spec['transit_line_selections']['last_alighting'] = "mode="+",".join(list(fare_modes[cut])) 
-                    sta2sta_spec['analyzed_demand'] = demand_matrix
 
                     output_path = output_file_name.format(operator=op, set_name=access_mode, period=period.name)
                     sta2sta(specification=sta2sta_spec,
                             output_file=output_path,
                             scenario=scenario,
                             append_to_output_file=False,
+                            class_name=class_name)
+                
+                # for all rails
+                all_modes = [fare_modes[m] for m in rail_operator_mode_dict.values()]
+                all_modes_list = [m for sublist in all_modes for m in sublist]
+                sta2sta_spec['transit_line_selections']['first_boarding'] = "mode="+",".join(all_modes_list) 
+                sta2sta_spec['transit_line_selections']['last_alighting'] = "mode="+",".join(all_modes_list)
+                
+                output_path = output_file_name.format(operator="all rails", set_name=access_mode, period=period.name)
+                sta2sta(specification=sta2sta_spec,
+                        output_file=output_path,
+                        scenario=scenario,
+                        append_to_output_file=False,
+                        class_name=class_name)
+        
+                # within each operator
+                for operator, agency in operator_agency_dict.items():
+                    sta2sta_spec['transit_line_selections']['first_boarding'] = "line="+operator+"__"
+                    sta2sta_spec['transit_line_selections']['last_alighting'] = "line="+operator+"__"
+
+                    output_path = output_file_name.format(operator=operator, set_name=access_mode, period=period.name)
+                    sta2sta(specification=sta2sta_spec,
+                            output_file=output_path,
+                            scenario=scenario,
+                            append_to_output_file=False,
+                            class_name=class_name)
+
+                # unlinked from rail to rail
+                for from_line in rail_line_id_list:
+                    sta2sta_spec['transit_line_selections']['first_boarding'] = "line="+from_line
+                    sta2sta_spec['transit_line_selections']['last_alighting'] = "line="+from_line
+
+                    output_path = output_file_name.format(operator="unlinked all rails", set_name=access_mode, period=period.name)
+                    sta2sta(specification=sta2sta_spec,
+                            output_file=output_path,
+                            scenario=scenario,
+                            append_to_output_file=True,
                             class_name=class_name)
 
 
