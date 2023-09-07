@@ -1,0 +1,59 @@
+﻿Attribute,Description
+id,transit segment identifier
+line,transit line name
+i_node,I-node of segment
+j_node,J-node of segment
+dwt,dwell time
+noali,no alighting at I-node
+noboa,no boarding at I-node
+ttf,transit time function
+voltr,transit segment volume
+board,transit boardings
+timtr,congested travel time
+@trantime_seg,uncongested travel time
+@board_cost,boarding cost $
+@invehicle_cost,in-vehicle cost $
+@ccost,congestion cost (crowding penalty)
+@base_timtr,uncongested travel time
+@iboard_pnr_trn_wlk,initial boarding (pnr_trn_wlk)
+@iboard_wlk_trn_pnr,initial boarding (wlk_trn_pnr)
+@iboard_knr_trn_wlk,initial boarding (knr_trn_wlk)
+@iboard_wlk_trn_knr,initial boarding (wlk_trn_knr)
+@iboard_wlk_trn_wlk,initial boarding (wlk_trn_wlk)
+@dboard_pnr_trn_wlk,direct transfer boarding (pnr_trn_wlk)
+@dboard_wlk_trn_pnr,direct transfer boarding (wlk_trn_pnr)
+@dboard_knr_trn_wlk,direct transfer boarding (knr_trn_wlk)
+@dboard_wlk_trn_knr,direct transfer boarding (wlk_trn_knr)
+@dboard_wlk_trn_wlk,direct transfer boarding (wlk_trn_wlk)
+@aboard_pnr_trn_wlk,auxiliary transfer boarding (pnr_trn_wlk)
+@aboard_wlk_trn_pnr,auxiliary transfer boarding (wlk_trn_pnr)
+@aboard_knr_trn_wlk,auxiliary transfer boarding (knr_trn_wlk)
+@aboard_wlk_trn_knr,auxiliary transfer boarding (wlk_trn_knr)
+@aboard_wlk_trn_wlk,auxiliary transfer boarding (wlk_trn_wlk)
+mode,modified transit mode based on fare system
+mdesc,transit mode description
+veh,vehicle type
+hdw,modified headway based on peaking factor
+speed,default transit vehicle speed
+@invehicle_factor,in-vehicle time perception factor at specific line
+@iboard_penalty,initial boarding time penalty at specific line
+@xboard_penalty,transfer boarding time penalty at specific line
+@orig_hdw,original headway
+vmode,transit vehicle mode
+vauteq,transit vehicle auto equivalent
+vcaps,transit vehicle seated capacity
+vcapt,transit vehicle total capacity
+@farezone,fare zone
+@hdw_fraction,"headway fraction, used to adjust transit waiting time"
+@wait_pfactor,"perception factor, used to adjust transit waiting time"
+@xboard_nodepen,boarding time penalty at specific node
+@trantime,bus time
+@drive_toll,"drive access/egress toll rate, same as sov toll in highway network"
+@aux_vol_pnr_trn_wlk,auxiliary transit volume (pnr_trn_wlk)
+@aux_vol_wlk_trn_pnr,auxiliary transit volume (wlk_trn_pnr)
+@aux_vol_knr_trn_wlk,auxiliary transit volume (knr_trn_wlk)
+@aux_vol_wlk_trn_knr,auxiliary transit volume (wlk_trn_knr)
+@aux_vol_wlk_trn_wlk,auxiliary transit volume (wlk_trn_wlk)
+#faresystem,fare system
+#stop_name,stop name
+#src_mode,original transit mode
